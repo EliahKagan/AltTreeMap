@@ -149,14 +149,10 @@ namespace Eliah {
         {
             if (node.Right != null) return MinNode(node.Right);
             
-            // FIXME: For clarity, have (last, node) in lieu of (node, parent).
-            var parent = node.Parent;
-            while (parent != null && node == parent.Right) {
-                node = parent;
-                parent = parent.Parent;
-            }
+            while (node.Parent != null && node == node.Parent.Right)
+                node = node.Parent;
             
-            return parent;
+            return node.Parent;
         }
         
         private static Node? PrevNode(Node node)
