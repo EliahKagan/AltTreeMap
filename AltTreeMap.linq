@@ -1,4 +1,5 @@
 <Query Kind="Program">
+  <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
 </Query>
 
@@ -137,6 +138,7 @@ namespace Eliah {
                 else break;
             }
             
+            Contract.Assert(child == null || child.Parent == parent);
             resultParent = parent;
             return ref child;
         }
@@ -145,6 +147,7 @@ namespace Eliah {
                              TKey key, TValue value)
         {
             MaybeCheckRI($"emplacing ({key}, {value})");
+            
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
@@ -196,7 +199,7 @@ namespace Eliah {
                 
                 if (Comparer.Compare(node.Left.Key, node.Key) >= 0)
                     Log("Left child key not less than parent.");
-                else if (node.Left.Parent != node.Parent)
+                else if (node.Left.Parent != node)
                     Log("Left child has incorrect parent reference.");
                 else if (!Check(node.Left))
                     Log("LEFT subtree contains invariant violation.");
@@ -211,7 +214,7 @@ namespace Eliah {
                 
                 if (Comparer.Compare(node.Key, node.Right.Key) >= 0)
                     Log("Right child key not greater than parent.");
-                else if (node.Right.Parent != node.Parent)
+                else if (node.Right.Parent != node)
                     Log("Right child has incorrect parent reference.");
                 else if (!Check(node.Right))
                     Log("RIGHT subtree contains invariant violation.");
