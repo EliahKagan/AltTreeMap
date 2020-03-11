@@ -1,4 +1,6 @@
-<Query Kind="Program" />
+<Query Kind="Program">
+  <Namespace>System.Runtime.CompilerServices</Namespace>
+</Query>
 
 namespace Eliah {
     public sealed class AltTreeMap<TKey, TValue>
@@ -51,7 +53,7 @@ namespace Eliah {
         {
             _root = null;
             Count = 0;
-            ++_version;
+            InvalidateEnumerators();
         }
         
         public bool ContainsKey(TKey key)
@@ -83,7 +85,7 @@ namespace Eliah {
             
             child = Drop(child);
             --Count;
-            ++_version;
+            InvalidateEnumerators();
             return true;
         }
         
@@ -148,7 +150,15 @@ namespace Eliah {
         {
             child = new Node(key, value, parent);
             ++Count;
-            ++_version;
+            InvalidateEnumerators();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InvalidateEnumerators()
+        {
+            unchecked {
+                ++_version;
+            }
         }
         
         private Node? _root = null;
