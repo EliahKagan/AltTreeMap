@@ -67,7 +67,7 @@ namespace Eliah {
             
             internal TValue Value { get; set; }
             
-            internal Node? Parent;
+            internal Node? Parent { get; set; }
             
             internal Node? Left;
             
