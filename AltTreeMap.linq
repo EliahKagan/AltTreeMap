@@ -52,6 +52,15 @@ namespace Eliah {
             Emplace(ref child, parent, key, value);
         }
         
+        public bool AddIfAbsent(TKey key, TValue value)
+        {
+            ref var child = ref Search(key, out var parent);
+            if (child != null) return false;
+            
+            Emplace(ref child, parent, key, value);
+            return true;
+        }
+        
         public void Clear()
         {
             _root = null;
@@ -63,9 +72,7 @@ namespace Eliah {
             => Search(key, out _) != null;
         
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-            => GetNodesInOrder()
-                .Select(node => KeyValuePair.Create(node.Key, node.Value))
-                .GetEnumerator();
+            => GetNodesInOrder().Select(node => node.Mapping).GetEnumerator();
         
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -80,6 +87,18 @@ namespace Eliah {
             InvalidateEnumerators();
             return true;
         }
+        
+        public KeyValuePair<TKey, TValue> First() => FirstNode().Mapping;
+        
+        public TKey FirstKey() => FirstNode().Key;
+        
+        public TValue FirstValue() => FirstNode().Value;
+        
+        public KeyValuePair<TKey, TValue> Last() => LastNode().Mapping;
+        
+        public TKey LastKey() => LastNode().Key;
+        
+        public TValue LastValue() => LastNode().Value;
         
         private sealed class Node {
             internal Node(TKey key, TValue value, Node? parent)
@@ -99,6 +118,9 @@ namespace Eliah {
             
             internal TValue Value { get; set; }
             
+            internal KeyValuePair<TKey, TValue> Mapping
+                => KeyValuePair.Create(Key, Value);
+            
             internal Node? Parent { get; set; }
             
             internal Node? Left;
@@ -110,6 +132,38 @@ namespace Eliah {
         }
         
         private static void Log(string message) => Console.WriteLine(message);
+        
+        private static Node MinNode(Node node)
+        {
+            while (node.Left != null) node = node.Left;
+            return node;
+        }
+        
+        private static Node MaxNode(Node node)
+        {
+            while (node.Right != null) node = node.Right;
+            return node;
+        }
+        
+        private static Node? NextNode(Node node)
+        {
+            if (node.Right != null) return MinNode(node.Right);
+            
+            // FIXME: For clarity, have (last, node) in lieu of (node, parent).
+            var parent = node.Parent;
+            while (parent != null && node == parent.Right) {
+                node = parent;
+                parent = parent.Parent;
+            }
+            
+            return parent;
+        }
+        
+        private static Node? PrevNode(Node node)
+        {
+            // FIXME: Implement this!
+            throw new NotImplementedException();
+        }
         
         /// <summary>Removes a node from the tree that contains it.</summary>
         /// <returns>The descendant that should replace it, if any.</returns>
@@ -153,8 +207,47 @@ namespace Eliah {
             InvalidateEnumerators();
         }
         
+        private Node FirstNode()
+        {
+            if (_root == null) {
+                throw new InvalidOperationException(
+                        "an empty tree has no first item");
+            }
+            
+            return MinNode(_root);
+        }
+        
+        private Node? FirstNodeOrNull()
+            => _root == null ? null : MinNode(_root);
+        
+        private Node LastNode()
+        {
+            if (_root == null) {
+                throw new InvalidOperationException(
+                        "an empty tree has no last item");
+            }
+            
+            return MaxNode(_root);
+        }
+        
+        private Node? LastNodeOrNull()
+            => _root == null ? null : MaxNode(_root);
+        
+        private IEnumerable<Node> GetNodesInOrder()
+        {
+            for (var cur = FirstNodeOrNull(); cur != null; cur = NextNode(cur))
+                yield return cur;
+        }
+        
+        private IEnumerable<Node> GetNodesInReverseOrder()
+        {
+            for (var cur = LastNodeOrNull(); cur != null; cur = PrevNode(cur))
+                yield return cur;
+        }
+        
         // Based on https://stackoverflow.com/users/41071/svick's answer
         // https://stackoverflow.com/a/10372118/1038860 on Stack Overflow.
+        /*
         private IEnumerable<Node> GetNodesInOrder()
         {
             var last = default(Node?);
@@ -187,6 +280,7 @@ namespace Eliah {
                 }
             }
         }
+        */
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvalidateEnumerators()
