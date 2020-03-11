@@ -245,43 +245,6 @@ namespace Eliah {
                 yield return cur;
         }
         
-        // Based on https://stackoverflow.com/users/41071/svick's answer
-        // https://stackoverflow.com/a/10372118/1038860 on Stack Overflow.
-        /*
-        private IEnumerable<Node> GetNodesInOrder()
-        {
-            var last = default(Node?);
-            
-            for (var node = _root; node != null; ) {
-                if (last == node.Parent) {
-                    if (node.Left == null) {
-                        last = null;
-                    } else {
-                        last = node;
-                        node = node.Left;
-                        continue;
-                    }
-                }
-                
-                if (last == node.Left) {
-                    yield return node;
-                    
-                    if (node.Right == null) {
-                        last = null;
-                    } else {
-                        last = node;
-                        node = node.Right;
-                    }
-                }
-                
-                if (last == node.Right) {
-                    last = node;
-                    node = node.Parent;
-                }
-            }
-        }
-        */
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvalidateEnumerators()
         {
