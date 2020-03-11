@@ -152,17 +152,17 @@ namespace Eliah {
     internal static class UnitTest {
         private static void Main()
         {
-            var tree = new AltTreeMap<string, int>();
-            
-            tree.Add("foo", 10);
-            tree.Add("bar", 20);
-            tree.Add("baz", 30);
-            tree.Add("quux", 40);
-            tree.Add("foobar", 50);
-            tree.Add("ham", 60);
-            tree.Add("spam", 70);
-            tree.Add("eggs", 80);
-            tree.Add("speegs", 90);
+            var tree = new AltTreeMap<string, int> {
+                { "foo", 10 },
+                { "bar", 20 },
+                { "baz", 30 },
+                { "quux", 40 },
+                { "foobar", 50 },
+                { "ham", 60 },
+                { "spam", 70 },
+                { "eggs", 80 },
+                { "speegs", 90 },
+            };
             
             tree.Dump();
         }
