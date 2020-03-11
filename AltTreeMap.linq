@@ -123,7 +123,7 @@ namespace Eliah {
         
         /// <summary>Removes a node from the tree that contains it.</summary>
         /// <returns>The descendant that should replace it, if any.</returns>
-        private Node? Drop(Node node)
+        private static Node? Drop(Node node)
         {
             // FIXME: Implement this!
             throw new NotImplementedException();
