@@ -153,6 +153,35 @@ namespace Eliah {
             InvalidateEnumerators();
         }
         
+        // Scratchwork for wrong idea:
+        /*
+        private IEnumerable<Node> GetNodesInOrder()
+        {
+            MaybeCheckRI("about to do O(1) aux space inorder enumeration");
+            
+            var last = default(Node?);
+            var node = _root;
+            
+            for (var started = false; node != null; ) {
+                if (started) {
+                    if (node.Right != null) {
+                        while (node.Right != null) node = node.Right;
+                        last = node.Parent;
+                    }
+                }
+                else started = true;
+                
+                while (last != null && node == last.Right) {
+                    node = last;
+                    last = last.Parent;
+                }
+                
+                if (last == null) break;
+                yield return last;
+            }
+        }
+        */
+        
         private IEnumerable<Node> GetNodesInOrder()
         {
             MaybeDumpNodes();
