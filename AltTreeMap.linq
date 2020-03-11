@@ -1,7 +1,8 @@
 <Query Kind="Program" />
 
 namespace Eliah {
-    public sealed class AltTreeMap<TKey, TValue> {
+    public sealed class AltTreeMap<TKey, TValue>
+            : IEnumerable<KeyValuePair<TKey, TValue>> {
         public AltTreeMap() : this(Comparer<TKey>.Default) { }
         
         public AltTreeMap(IComparer<TKey> comparer)
@@ -49,6 +50,36 @@ namespace Eliah {
         public bool ContainsKey(TKey key)
             => Search(key, out _) != null;
         
+        // FIXME: Replace with an O(1)-space iterative implementation.
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            static IEnumerable<Node> InOrder(Node? root)
+            {
+                if (root == null) yield break;
+                
+                foreach (var node in InOrder(root.Left)) yield return node;
+                yield return root;
+                foreach (var node in InOrder(root.Right)) yield return node;
+            }
+            
+            foreach (var node in InOrder(_root))
+                yield return KeyValuePair.Create(node.Key, node.Value);
+        }
+        
+        System.Collections.IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
+        
+        public bool Remove(TKey key)
+        {
+            ref var child = ref Search(key, out var parent);
+            if (child == null) return false;
+            
+            child = Drop(child);
+            --Count;
+            ++_version;
+            return true;
+        }
+        
         private sealed class Node {
             internal Node(TKey key, TValue value, Node? parent)
                 : this(key, value, parent, null, null) { }
@@ -72,6 +103,14 @@ namespace Eliah {
             internal Node? Left;
             
             internal Node? Right;
+        }
+        
+        /// <summary>Removes a node from the tree that contains it.</summary>
+        /// <returns>The descendant that should replace it, if any.</returns>
+        private Node? Drop(Node node)
+        {
+            // FIXME: Implement this!
+            throw new NotImplementedException();
         }
         
         private ref Node? Search(TKey key, out Node? resultParent)
@@ -113,8 +152,19 @@ namespace Eliah {
     internal static class UnitTest {
         private static void Main()
         {
-            var tree = new AltTreeMap<string, decimal>();
-            Console.WriteLine($"Hello, {tree}! ");
+            var tree = new AltTreeMap<string, int>();
+            
+            tree.Add("foo", 10);
+            tree.Add("bar", 20);
+            tree.Add("baz", 30);
+            tree.Add("quux", 40);
+            tree.Add("foobar", 50);
+            tree.Add("ham", 60);
+            tree.Add("spam", 70);
+            tree.Add("eggs", 80);
+            tree.Add("speegs", 90);
+            
+            tree.Dump();
         }
     }
 }
