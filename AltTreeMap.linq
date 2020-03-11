@@ -153,35 +153,75 @@ namespace Eliah {
             InvalidateEnumerators();
         }
         
-        // Scratchwork for wrong idea:
+        // Based on https://stackoverflow.com/users/41071/svick's answer
+        // https://stackoverflow.com/a/10372118/1038860 on Stack Overflow.
+        private IEnumerable<Node> GetNodesInOrder()
+        {
+            var last = default(Node?);
+            
+            for (var node = _root; node != null; ) {
+                if (last == node.Parent) {
+                    if (node.Left == null) {
+                        last = null;
+                    } else {
+                        last = node;
+                        node = node.Left;
+                        continue;
+                    }
+                }
+                
+                if (last == node.Left) {
+                    yield return node;
+                    
+                    if (node.Right == null) {
+                        last = null;
+                    } else {
+                        last = node;
+                        node = node.Right;
+                    }
+                }
+                
+                if (last == node.Right) {
+                    last = node;
+                    node = node.Parent;
+                }
+            }
+        }
+        
+        // Hmm, doesn't work:
         /*
         private IEnumerable<Node> GetNodesInOrder()
         {
-            MaybeCheckRI("about to do O(1) aux space inorder enumeration");
-            
             var last = default(Node?);
-            var node = _root;
             
-            for (var started = false; node != null; ) {
-                if (started) {
-                    if (node.Right != null) {
-                        while (node.Right != null) node = node.Right;
-                        last = node.Parent;
+            for (var node = _root; node != null; ) {
+                if (node.Left != null) {
+                    while (node.Left != null) node = node.Left;
+                    last = null;
+                }
+                
+                if (last == node.Left) {
+                    yield return node;
+                    
+                    if (node.Right == null) {
+                        last = null;
+                    } else {
+                        last = node;
+                        node = node.Right;
+                        continue;
                     }
                 }
-                else started = true;
                 
-                while (last != null && node == last.Right) {
-                    node = last;
-                    last = last.Parent;
+                if (last == node.Right) {
+                    last = node;
+                    node = node.Parent;
                 }
-                
-                if (last == null) break;
-                yield return last;
             }
         }
         */
         
+        // My original wrong implementation:
+        /*
         private IEnumerable<Node> GetNodesInOrder()
         {
             MaybeDumpNodes();
@@ -215,6 +255,7 @@ namespace Eliah {
                 }
             }
         }
+        */
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvalidateEnumerators()
