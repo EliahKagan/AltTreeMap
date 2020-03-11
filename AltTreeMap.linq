@@ -4,7 +4,7 @@
 </Query>
 
 #define DEBUG_REPRESENTATION_INVARIANTS
-//#define DEBUG_TOPOLOGY
+#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     public sealed class AltTreeMap<TKey, TValue>
@@ -155,25 +155,32 @@ namespace Eliah {
         
         private IEnumerable<Node> GetNodesInOrder()
         {
+            MaybeDumpNodes();
             MaybeCheckRI("about to do O(1) aux space inorder enumeration");
+            void Report(Node node, string message)
+                => new { node.Key, node.Value}.Dump(message + ':');
             
             var last = default(Node?);
         
             for (var node = _root; node != null; ) {
                 // Go left as far as possible.
+                Report(node, "Going all the way left from");
                 while (node.Left != null) node = node.Left;
                 
                 if (node.Right == null || node.Right != last) {
                     // We've emitted all nodes left of here but nodes right of
                     // here. So emit the current node.
+                    Report(node, "Emitting");
                     yield return node;
                 }
                 
                 if (node.Right != null && node.Right != last) {
-                    // We haven't gone right of here yet but we can. Do so now.
+                    // We haven't gone right of here yet but we can. Do so next.
+                    Report(node, "Going right from here next");
                     node = node.Right;
                 } else {
                     // We've emitted all nodes right of here. Retreat.
+                    Report(node, "Retreating from");
                     last = node;
                     node = node.Parent;
                 }
