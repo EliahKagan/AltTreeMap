@@ -61,23 +61,10 @@ namespace Eliah {
         public bool ContainsKey(TKey key)
             => Search(key, out _) != null;
         
-        // FIXME: Replace with an O(1)-space iterative implementation.
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            static IEnumerable<Node> InOrder(Node? root)
-            {
-                if (root == null) yield break;
-                
-                foreach (var node in InOrder(root.Left)) yield return node;
-                yield return root;
-                foreach (var node in InOrder(root.Right)) yield return node;
-            }
-            
-            foreach (var node in InOrder(_root))
-                yield return KeyValuePair.Create(node.Key, node.Value);
-            
-            MaybeDumpNodes();
-        }
+            => GetNodesInOrder()
+                .Select(node => KeyValuePair.Create(node.Key, node.Value))
+                .GetEnumerator();
         
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -160,6 +147,31 @@ namespace Eliah {
             InvalidateEnumerators();
         }
         
+        private IEnumerable<Node> GetNodesInOrder()
+        {
+            var last = default(Node?);
+        
+            for (var node = _root; node != null; ) {
+                // Go left as far as possible.
+                while (node.Left != null) node = node.Left;
+                
+                if (node.Right == null || node.Right != last) {
+                    // We've emitted all nodes left of here but nodes right of
+                    // here. So emit the current node.
+                    yield return node;
+                }
+                
+                if (node.Right != null && node.Right != last) {
+                    // We haven't gone right of here yet but we can. Do so now.
+                    node = node.Right;
+                } else {
+                    // We've emitted all nodes right of here. Retreat.
+                    last = node;
+                    node = node.Parent;
+                }
+            }
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvalidateEnumerators()
         {
@@ -191,9 +203,9 @@ namespace Eliah {
                 { "speegs", 90 },
             };
             
-            tree.Dump($"after building, size {tree.Count}");
-            tree.Clear();
-            tree.Dump($"after clearing, size {tree.Count}");
+            //tree.Dump($"after building, size {tree.Count}");
+            //tree.Clear();
+            //tree.Dump($"after clearing, size {tree.Count}");
         }
     }
 }
