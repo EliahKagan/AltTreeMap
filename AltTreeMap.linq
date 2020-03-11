@@ -3,6 +3,7 @@
   <Namespace>System.Runtime.CompilerServices</Namespace>
 </Query>
 
+#define VERBOSE_DEBUGGING
 #define DEBUG_REPRESENTATION_INVARIANTS
 #define DEBUG_TOPOLOGY
 
@@ -11,7 +12,11 @@ namespace Eliah {
             : IEnumerable<KeyValuePair<TKey, TValue>> {
         public AltTreeMap() : this(Comparer<TKey>.Default) { }
         
-        public AltTreeMap(IComparer<TKey> comparer) => Comparer = comparer;
+        public AltTreeMap(IComparer<TKey> comparer)
+        {
+            Comparer = comparer;
+            MaybeCheckRI("created empty tree");
+        }
         
         public IComparer<TKey> Comparer { get; }
         
@@ -66,6 +71,7 @@ namespace Eliah {
             _root = null;
             Count = 0;
             InvalidateEnumerators();
+            MaybeCheckRI("cleared all nodes");
         }
         
         public bool ContainsKey(TKey key)
@@ -85,6 +91,7 @@ namespace Eliah {
             child = Drop(child);
             --Count;
             InvalidateEnumerators();
+            MaybeCheckRI($"removed node with key: {key}");
             return true;
         }
         
@@ -131,7 +138,14 @@ namespace Eliah {
                 => new { Key, Value, Parent, Left, Right };
         }
         
+        /// <summary>Helper funtion for Note() and Warn().</summary>
+        /// <remarks>So we don't always have to use the Console.</remarks>
         private static void Log(string message) => Console.WriteLine(message);
+        
+        [Conditional("VERBOSE_DEBUGGING")]
+        private static void Note(string message) => Log(message);
+        
+        private static void Warn(string message) => Log(message);
         
         private static Node MinNode(Node node)
         {
@@ -157,8 +171,12 @@ namespace Eliah {
         
         private static Node? PrevNode(Node node)
         {
-            // FIXME: Implement this!
-            throw new NotImplementedException();
+            if (node.Left != null) return MaxNode(node.Left);
+            
+            while (node.Parent != null && node == node.Parent.Left)
+                node = node.Parent;
+            
+            return node.Parent;
         }
         
         /// <summary>Removes a node from the tree that contains it.</summary>
@@ -196,11 +214,10 @@ namespace Eliah {
         private void Emplace(ref Node? child, Node? parent,
                              TKey key, TValue value)
         {
-            MaybeCheckRI($"emplacing ({key}, {value})");
-            
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
+            MaybeCheckRI($"emplaced ({key}, {value})");
         }
         
         private Node FirstNode()
@@ -250,7 +267,7 @@ namespace Eliah {
         }
         
         [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
-        private void MaybeCheckRI(string reason)
+        private void MaybeCheckRI(string reason) // TODO: also validate Count
         {
             bool Check(Node node) => CheckLeft(node) && CheckRight(node);
             
@@ -259,11 +276,11 @@ namespace Eliah {
                 if (node.Left == null) return true;
                 
                 if (Comparer.Compare(node.Left.Key, node.Key) >= 0)
-                    Log("Left child key not less than parent.");
+                    Warn("Left child key not less than parent.");
                 else if (node.Left.Parent != node)
-                    Log("Left child has incorrect parent reference.");
+                    Warn("Left child has incorrect parent reference.");
                 else if (!Check(node.Left))
-                    Log("LEFT subtree contains invariant violation.");
+                    Warn("LEFT subtree contains invariant violation.");
                 else return true;
                 
                 return false;
@@ -274,26 +291,26 @@ namespace Eliah {
                 if (node.Right == null) return true;
                 
                 if (Comparer.Compare(node.Key, node.Right.Key) >= 0)
-                    Log("Right child key not greater than parent.");
+                    Warn("Right child key not greater than parent.");
                 else if (node.Right.Parent != node)
-                    Log("Right child has incorrect parent reference.");
+                    Warn("Right child has incorrect parent reference.");
                 else if (!Check(node.Right))
-                    Log("RIGHT subtree contains invariant violation.");
+                    Warn("RIGHT subtree contains invariant violation.");
                 else return true;
                 
                 return false;
             }
             
-            Log($"Checking RI because: {reason}");
+            Note($"Checking RI because: {reason}");
             
             if (_root == null)
-                Log("Representation invariants OK. Tree is empty.");
+                Note("Representation invariants OK. Tree is empty.");
             else if (_root.Parent != null)
-                Log("The root of the tree thinks it has a parent node!");
+                Warn("The root of the tree thinks it has a parent node!");
             else if (Check(_root))
-                Log("Representation invariants seem OK.");
+                Note("Representation invariants seem OK.");
             else 
-                Log("Representation invariant(s) VIOLATED!");
+                Warn("Representation invariant(s) VIOLATED!");
         }
         
         [Conditional("DEBUG_TOPOLOGY")]
