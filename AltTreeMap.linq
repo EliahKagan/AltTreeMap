@@ -2,6 +2,8 @@
   <Namespace>System.Runtime.CompilerServices</Namespace>
 </Query>
 
+//#define DEBUG_TOPOLOGY
+
 namespace Eliah {
     public sealed class AltTreeMap<TKey, TValue>
             : IEnumerable<KeyValuePair<TKey, TValue>> {
@@ -73,6 +75,8 @@ namespace Eliah {
             
             foreach (var node in InOrder(_root))
                 yield return KeyValuePair.Create(node.Key, node.Value);
+            
+            MaybeDumpNodes();
         }
         
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
@@ -112,6 +116,9 @@ namespace Eliah {
             internal Node? Left;
             
             internal Node? Right;
+            
+            private object ToDump()
+                => new { Key, Value, Parent, Left, Right };
         }
         
         /// <summary>Removes a node from the tree that contains it.</summary>
@@ -160,6 +167,9 @@ namespace Eliah {
                 ++_version;
             }
         }
+        
+        [Conditional("DEBUG_TOPOLOGY")]
+        private void MaybeDumpNodes() => _root.Dump();
         
         private Node? _root = null;
         
