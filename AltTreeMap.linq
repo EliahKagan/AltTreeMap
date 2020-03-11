@@ -47,6 +47,13 @@ namespace Eliah {
             Emplace(ref child, parent, key, value);
         }
         
+        public void Clear()
+        {
+            _root = null;
+            Count = 0;
+            ++_version;
+        }
+        
         public bool ContainsKey(TKey key)
             => Search(key, out _) != null;
         
@@ -164,7 +171,9 @@ namespace Eliah {
                 { "speegs", 90 },
             };
             
-            tree.Dump();
+            tree.Dump($"after building, size {tree.Count}");
+            tree.Clear();
+            tree.Dump($"after clearing, size {tree.Count}");
         }
     }
 }
