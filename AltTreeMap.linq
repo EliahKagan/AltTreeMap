@@ -1,4 +1,5 @@
 <Query Kind="Program">
+  <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
 </Query>
@@ -85,6 +86,12 @@ namespace Eliah {
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
         
+        public TValue GetOrDefault(TKey key, TValue value = default)
+        {
+            var child = Search(key, out _);
+            return child == null ? value : child.Value;
+        }
+        
         public bool Remove(TKey key)
         {
             ref var child = ref Search(key, out var parent);
@@ -101,6 +108,20 @@ namespace Eliah {
             => GetNodesInReverseOrder()
                 .Select(node => node.Mapping)
                 .GetEnumerator();
+        
+        public bool TryGetValue(TKey key,
+                                [MaybeNullWhen(false)] out TValue value)
+        {
+            var child = Search(key, out _);
+            
+            if (child == null) {
+                value = default!; // FIXME: Given MaybeNullWhen, is "!" needed?
+                return false;
+            }
+            
+            value = child.Value;
+            return true;
+        }
         
         public KeyValuePair<TKey, TValue> First() => FirstNode().Mapping;
         
@@ -147,6 +168,7 @@ namespace Eliah {
         
         /// <summary>Helper funtion for Note() and Warn().</summary>
         /// <remarks>So we don't always have to use the Console.</remarks>
+        // TODO: Log(), Note(), and Warn() should really go outside AltTreeMap.
         private static void Log(string message) => Console.WriteLine(message);
         
         [Conditional("VERBOSE_DEBUGGING")]
@@ -345,9 +367,37 @@ namespace Eliah {
             
             tree.Dump($"after building, size {tree.Count}");
             tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
+            
+            tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar", "waffles");
+            
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
             tree.Reverse().Dump($"after clearing, size {tree.Count} (reversed)");
+        }
+        
+        private static void TestConditionalGetMethods<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
+        {
+            tree.TestTryGetValue(keys);
+            tree.TestGetOrDefault(keys);
+        }
+        
+        private static void TestTryGetValue<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
+        {
+            keys.Select(key => {
+                var result = tree.TryGetValue(key, out var value);
+                return new { key, result, value };
+            }).Dump(nameof(TestTryGetValue));
+        }
+        
+        private static void TestGetOrDefault<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
+        {
+            keys.Select(key => {
+                var value = tree.GetOrDefault(key);
+                return new { key, value };
+            }).Dump(nameof(TestGetOrDefault));
         }
     }
 }
