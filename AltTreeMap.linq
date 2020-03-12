@@ -69,6 +69,8 @@ namespace Eliah {
         
         public void Clear()
         {
+            MaybeDumpNodes();
+        
             _root = null;
             Count = 0;
             InvalidateEnumerators();
@@ -417,9 +419,15 @@ namespace Eliah {
             tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
             
             tree.TestEnumeratorInvalidation("ham", "waffles", -40);
-            
             tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar",
                                            "waffles", "toast");
+            tree.Dump($"after adding \"waffles\"");
+            
+            tree.Remove("bar");
+            tree.Dump($"after removing \"bar\", size {tree.Count}");
+            
+            tree.Remove("foo");
+            tree.Dump($"after removing \"foo\", size {tree.Count}");
             
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
