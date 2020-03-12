@@ -431,6 +431,7 @@ namespace Eliah {
             tree.TestRemove("foo");
             tree.TestRemove("waffles");
             tree.TestRemove("quux");
+            tree.TestRemove("waffles");
             
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
