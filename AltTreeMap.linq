@@ -573,10 +573,11 @@ namespace Eliah {
         [Conditional("BIG_TESTS")]
         private static void TestDeletionBig(Random random)
         {
-            var primes = random.GetPrimes(10_000);
+            var primes = random.GetPrimes(100_000);
             var lows = primes.Select(kv => kv.Key).Take(100);
             string.Join(", ", lows).Dump("very lowest primes");
-            var highs = primes.Reverse().Select(kv => kv.Key).Take(100);
+            var highs = primes.Reverse().Select(kv => kv.Key)
+                              .Take(100).Reverse();
             string.Join(", ", highs).Dump("fairly low primes");
         }
         
