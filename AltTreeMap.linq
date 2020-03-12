@@ -116,10 +116,8 @@ namespace Eliah {
             return true;
         }
         
-        public IEnumerator<KeyValuePair<TKey, TValue>> Reverse()
-            => GetNodesInReverseOrder()
-                .Select(node => node.Mapping)
-                .GetEnumerator();
+        public IEnumerable<KeyValuePair<TKey, TValue>> Reverse()
+            => GetNodesInReverseOrder().Select(node => node.Mapping);
         
         public bool TryGetValue(TKey key,
                                 [MaybeNullWhen(false)] out TValue value)
@@ -392,7 +390,8 @@ namespace Eliah {
             };
             
             tree.Dump($"after building, size {tree.Count}");
-            tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
+            tree.Reverse().ToList() // Verifies Reverse returns IEnumerable<T>.
+                .Dump($"after building, size {tree.Count} (reversed)");
             
             tree.TestEnumeratorInvalidation("ham", "waffles", -40);
             
@@ -401,7 +400,8 @@ namespace Eliah {
             
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
-            tree.Reverse().Dump($"after clearing, size {tree.Count} (reversed)");
+            tree.Reverse()
+                .Dump($"after clearing, size {tree.Count} (reversed)");
         }
         
         private static void TestEnumeratorInvalidation<TKey, TValue>(
