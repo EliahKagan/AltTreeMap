@@ -78,7 +78,9 @@ namespace Eliah {
             => Search(key, out _) != null;
         
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-            => GetNodesInOrder().Select(node => node.Mapping).GetEnumerator();
+            => GetNodesInOrder()
+                .Select(node => node.Mapping)
+                .GetEnumerator();
         
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -94,6 +96,11 @@ namespace Eliah {
             MaybeCheckRI($"removed node with key: {key}");
             return true;
         }
+        
+        public IEnumerator<KeyValuePair<TKey, TValue>> Reverse()
+            => GetNodesInReverseOrder()
+                .Select(node => node.Mapping)
+                .GetEnumerator();
         
         public KeyValuePair<TKey, TValue> First() => FirstNode().Mapping;
         
@@ -337,8 +344,10 @@ namespace Eliah {
             };
             
             tree.Dump($"after building, size {tree.Count}");
+            tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
+            tree.Reverse().Dump($"after clearing, size {tree.Count} (reversed)");
         }
     }
 }
