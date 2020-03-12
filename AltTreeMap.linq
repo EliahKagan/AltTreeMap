@@ -581,41 +581,39 @@ namespace Eliah {
             string.Join(", ", highs).Dump("fairly low primes");
         }
         
-        private static AltTreeMap<int, int?>
-        GetPrimes(this Random random, int upperBound)
+        private static AltTreeMap<long, int?>
+        GetPrimes(this Random random, long upperBound)
         {
-            var primes = random.GetShuffledOdds(3, upperBound);
-            primes.Add(2, null);
+            var primes = random.GetShuffledOdds(3L, upperBound);
+            primes.Add(2L, null);
             
-            checked {
-                for (var i = 3; i <= upperBound; i += 2) {
-                    for (var j = i * i; j <= upperBound; j += i * 2)
-                        primes.Remove(j);
-                }
+            for (var i = 3L; i <= upperBound; i += 2L) {
+                for (var j = i * i; j <= upperBound; j += i * 2L)
+                    primes.Remove(j);
             }
             
             return primes;
         }
         
-        private static AltTreeMap<int, int?>
-        GetShuffledOdds(this Random random, int fromInclusive, int toInclusive)
+        private static AltTreeMap<long, int?>
+        GetShuffledOdds(this Random random, long fromInclusive, long toInclusive)
         {
-            if (fromInclusive % 2 == 0) {
+            if (fromInclusive % 2L == 0L) {
                 checked {
                     ++fromInclusive;
                 }
             }
             
-            IEnumerable<int> GetOdds()
+            IEnumerable<long> GetOdds()
             {
-                for (var odd = fromInclusive; odd <= toInclusive; odd += 2)
+                for (var odd = fromInclusive; odd <= toInclusive; odd += 2L)
                     yield return odd;
             }
             
             var seq = GetOdds().ToList();
             random.Shuffle(seq);
             
-            var odds = new AltTreeMap<int, int?>();
+            var odds = new AltTreeMap<long, int?>();
             seq.ForEach(odd => odds.Add(odd, null));
             return odds;
         }
