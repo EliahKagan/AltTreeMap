@@ -19,6 +19,29 @@ namespace Eliah {
             MaybeCheckRI("created empty tree");
         }
         
+        public AltTreeMap(AltTreeMap<TKey, TValue> other)
+            : this(other.Comparer)
+        {
+            // FIXME: Do this iteratively with O(1) auxiliary space instead.
+            static void Copy(Node src, out Node dest, Node? destParent)
+            {
+                var child = new Node(src.Key, src.Value, destParent);
+                dest = child;
+                
+                if (src.Left != null)
+                    Copy(src.Left, out dest.Left, dest);
+                
+                if (src.Right != null)
+                    Copy(src.Right, out dest.Right, dest);
+            }
+            
+            if (other._root != null) {
+                Copy(other._root, out _root, null);
+                Count = other.Count;
+                MaybeCheckRI("populated initial nodes from existing tree");
+            }
+        }
+        
         public IComparer<TKey> Comparer { get; }
         
         public int Count { get; private set; } = 0;
@@ -397,7 +420,10 @@ namespace Eliah {
         }
         
         [Conditional("DEBUG_TOPOLOGY")]
-        private void MaybeDumpNodes() => _root.Dump();
+        private void MaybeDumpNodes()
+            => _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
+        
+        private string PseudoAddress => $"0x{GetHashCode():X}";
         
         private Node? _root = null;
         
@@ -422,6 +448,8 @@ namespace Eliah {
             tree.Dump($"after building, size {tree.Count}");
             tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
             
+            var copy = new AltTreeMap<string, int>(tree);
+            
             tree.TestEnumeratorInvalidation("ham", "waffles", -40);
             tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar",
                                            "waffles", "toast");
@@ -436,6 +464,10 @@ namespace Eliah {
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
             tree.Reverse().Dump($"after clearing, size {tree.Count} (reversed)");
+            
+            copy.Dump($"{nameof(copy)}, after changes original {nameof(tree)}");
+            copy.Clear();
+            copy.Dump($"{nameof(copy)}, after itself being cleared");
         }
         
         private static void TestEnumeratorInvalidation<TKey, TValue>(
