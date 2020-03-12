@@ -224,8 +224,30 @@ namespace Eliah {
         /// <returns>The descendant that should replace it, if any.</returns>
         private static Node? Drop(Node node)
         {
-            // FIXME: Implement this!
-            throw new NotImplementedException();
+            if (node.Left == null) {
+                if (node.Right == null) return null;
+                
+                node.Right.Parent = node.Parent;
+                return node.Right;
+            }
+            
+            if (node.Right == null) {
+                node.Left.Parent = node.Parent;
+                return node.Left;
+            }
+            
+            var next = MinNode(node.Right);
+            
+            if (next != node.Right) {
+                next.Parent.Left = next.Right;
+                if (next.Right != null) next.Right.Parent = next.Parent;
+            }
+            
+            next.Left = node.Left;
+            next.Left.Parent = next;
+            next.Parent = node.Parent;
+            
+            return next;
         }
         
         private static void InvalidEnumeratorUsed()
