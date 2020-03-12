@@ -424,11 +424,10 @@ namespace Eliah {
                                            "waffles", "toast");
             tree.Dump($"after adding \"waffles\"");
             
-            tree.Remove("bar");
-            tree.Dump($"after removing \"bar\", size {tree.Count}");
-            
-            tree.Remove("foo");
-            tree.Dump($"after removing \"foo\", size {tree.Count}");
+            tree.TestRemove("bar");
+            tree.TestRemove("foo");
+            tree.TestRemove("waffles");
+            tree.TestRemove("quux");
             
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
@@ -475,6 +474,15 @@ namespace Eliah {
         {
             keys.Select(key => new { key, value = tree.GetOrDefault(key) })
                 .Dump(nameof(TestGetOrDefault));
+        }
+        
+        private static void TestRemove<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, TKey key)
+        {
+            if (tree.Remove(key))
+                tree.Dump($"key \"{key}\" removed, new size {tree.Count}");
+            else
+                "".Dump($"key \"{key}\" not found to remove");
         }
     }
 }
