@@ -375,7 +375,13 @@ namespace Eliah {
         [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
         private void MaybeCheckRI(string reason) // TODO: also validate Count
         {
-            bool Check(Node node) => CheckLeft(node) && CheckRight(node);
+            var count = 0;
+            
+            bool Check(Node node)
+            {
+                ++count;
+                return CheckLeft(node) && CheckRight(node);
+            }
             
             bool CheckLeft(Node node)
             {
@@ -409,14 +415,18 @@ namespace Eliah {
             
             Note($"Checking RI because: {reason}");
             
-            if (_root == null)
+            if (_root == null && Count == 0)
                 Note("Representation invariants OK. Tree is empty.");
+            else if (_root == null) // Count != 0
+                Warn($"_root is null but Count is {Count}!");
             else if (_root.Parent != null)
                 Warn("The root of the tree thinks it has a parent node!");
-            else if (Check(_root))
-                Note("Representation invariants seem OK.");
-            else 
+            else if (!Check(_root))
                 Warn("Representation invariant(s) VIOLATED!");
+            else if (count != Count)
+                Warn($"Tree has {count} nodes but thinks it has {Count}!");
+            else
+                Note("Representation invariants seem OK.");
         }
         
         [Conditional("DEBUG_TOPOLOGY")]
