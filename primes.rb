@@ -2,4 +2,4 @@
 
 require 'prime'
 
-puts Prime.take_while { |prime| prime <= 100_000 } * ', '
+puts Prime.take_while { |prime| prime <= 1_000_000 } * ', '
