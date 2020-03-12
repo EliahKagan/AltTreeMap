@@ -4,9 +4,10 @@
   <Namespace>System.Runtime.CompilerServices</Namespace>
 </Query>
 
-#define VERBOSE_DEBUGGING
-#define DEBUG_REPRESENTATION_INVARIANTS
-#define DEBUG_TOPOLOGY
+//#define VERBOSE_DEBUGGING
+//#define DEBUG_REPRESENTATION_INVARIANTS
+//#define DEBUG_TOPOLOGY
+#define BIG_TESTS
 
 namespace Eliah {
     public sealed class AltTreeMap<TKey, TValue>
@@ -444,7 +445,7 @@ namespace Eliah {
         private static void Main()
         {
             RunGeneralTests();
-            RunDeletionTest();
+            RunDeletionTests();
         }
     
         private static void RunGeneralTests()
@@ -537,14 +538,81 @@ namespace Eliah {
                 "".Dump($"key \"{key}\" not found to remove");
         }
         
-        private static void RunDeletionTest()
+        private static void RunDeletionTests()
         {
             var random = new Random();
-            var a = Enumerable.Range(0, 100).ToArray();
-            random.Shuffle(a);
-            string.Join(", ", a).Dump("Shuffled values.");
-            Array.Sort(a);
-            string.Join(", ", a).Dump("System-sorted values.");
+            TestDeletionSmall(random);
+            TestDeletionBig(random);
+        }
+        
+        private static void TestDeletionSmall(Random random)
+        {
+            const int window_size = 20;
+            const int total_size = 100;
+            const int outside_window_size = total_size - window_size;
+            
+            var permutation = Enumerable.Range(0, total_size).ToArray();
+            random.Shuffle(permutation);
+            
+            var window = new AltTreeMap<int, int>();
+            
+            foreach (var right in Enumerable.Range(0, window_size))
+                window.Add(permutation[right], right);
+            
+            foreach (var left in Enumerable.Range(0, outside_window_size)) {
+                var removed = window.Remove(permutation[left]);
+                Contract.Assert(removed);
+                
+                var right = left + window_size;
+                window.Add(permutation[right], right);
+            }
+            
+            string.Join(", ", window).Dump("right side");
+        }
+        
+        [Conditional("BIG_TESTS")]
+        private static void TestDeletionBig(Random random)
+        {
+            var primes = random.GetPrimes(10_000);
+            primes.Take(10).Dump("very lowest primes");
+            primes.Reverse().Select(kv => kv.Key).Take(10).Dump("fairly low primes");
+        }
+        
+        private static AltTreeMap<int, int?>
+        GetPrimes(this Random random, int upperBound)
+        {
+            var primes = random.GetShuffledOdds(3, upperBound);
+            primes.Add(2, null);
+            
+            for (var i = 3; i <= upperBound; i += 2) {
+                for (var j = i * i; j <= upperBound; j += i * 2)
+                    primes.Remove(j);
+            }
+            
+            return primes;
+        }
+        
+        private static AltTreeMap<int, int?>
+        GetShuffledOdds(this Random random, int fromInclusive, int toInclusive)
+        {
+            if (fromInclusive % 2 == 0) {
+                checked {
+                    ++fromInclusive;
+                }
+            }
+            
+            IEnumerable<int> GetOdds()
+            {
+                for (var odd = fromInclusive; odd <= toInclusive; odd += 2)
+                    yield return odd;
+            }
+            
+            var seq = GetOdds().ToList();
+            random.Shuffle(seq);
+            
+            var odds = new AltTreeMap<int, int?>();
+            seq.ForEach(odd => odds.Add(odd, null));
+            return odds;
         }
         
         private static void Shuffle<T>(this Random random, IList<T> items)
