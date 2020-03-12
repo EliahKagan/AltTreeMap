@@ -587,9 +587,11 @@ namespace Eliah {
             var primes = random.GetShuffledOdds(3, upperBound);
             primes.Add(2, null);
             
-            for (var i = 3; i <= upperBound; i += 2) {
-                for (var j = i * i; j <= upperBound; j += i * 2)
-                    primes.Remove(j);
+            checked {
+                for (var i = 3; i <= upperBound; i += 2) {
+                    for (var j = i * i; j <= upperBound; j += i * 2)
+                        primes.Remove(j);
+                }
             }
             
             return primes;
