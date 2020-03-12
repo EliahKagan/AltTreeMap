@@ -78,6 +78,18 @@ namespace Eliah {
         public bool ContainsKey(TKey key)
             => Search(key, out _) != null;
         
+        public void ForEach(Action<TKey, TValue> action)
+        {
+            foreach (var node in GetNodesInOrder())
+                action(node.Key, node.Value);
+        }
+        
+        public void ForEachReverse(Action<TKey, TValue> action)
+        {
+            foreach (var node in GetNodesInReverseOrder())
+                action(node.Key, node.Value);
+        }
+        
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
             => GetNodesInOrder()
                 .Select(node => node.Mapping)
@@ -216,6 +228,10 @@ namespace Eliah {
             throw new NotImplementedException();
         }
         
+        private static void InvalidEnumeratorUsed()
+            => throw new InvalidOperationException(
+                    "tree structure modified during enumeration");
+        
         private ref Node? Search(TKey key, out Node? resultParent)
         {
             var parent = default(Node?);
@@ -277,14 +293,24 @@ namespace Eliah {
         
         private IEnumerable<Node> GetNodesInOrder()
         {
-            for (var cur = FirstNodeOrNull(); cur != null; cur = NextNode(cur))
-                yield return cur;
+            var ver = _version;
+            
+            for (var node = FirstNodeOrNull(); node != null;
+                                               node = NextNode(node)) {
+                if (_version != ver) InvalidEnumeratorUsed();
+                yield return node;
+            }
         }
         
         private IEnumerable<Node> GetNodesInReverseOrder()
         {
-            for (var cur = LastNodeOrNull(); cur != null; cur = PrevNode(cur))
-                yield return cur;
+            var ver = _version;
+        
+            for (var node = LastNodeOrNull(); node != null;
+                                              node = PrevNode(node)) {
+                if (_version != ver) InvalidEnumeratorUsed();
+                yield return node;
+            }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -368,11 +394,33 @@ namespace Eliah {
             tree.Dump($"after building, size {tree.Count}");
             tree.Reverse().Dump($"after building, size {tree.Count} (reversed)");
             
-            tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar", "waffles");
+            tree.TestEnumeratorInvalidation("ham", "waffles", -40);
+            
+            tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar",
+                                           "waffles", "toast");
             
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
             tree.Reverse().Dump($"after clearing, size {tree.Count} (reversed)");
+        }
+        
+        private static void TestEnumeratorInvalidation<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree,
+                TKey triggerKey, TKey newKey, TValue newValue)
+        {
+            var tokens = new List<string>(tree.Count);
+            
+            try {
+                tree.ForEach((key, value) => {
+                    tokens.Add($"{key},{value}");
+                    
+                    if (tree.Comparer.Compare(key, triggerKey) == 0)
+                        tree.Add(newKey, newValue);
+                });
+            }
+            catch (InvalidOperationException e) {
+                e.Dump(string.Join("; ", tokens));
+            }
         }
         
         private static void TestConditionalGetMethods<TKey, TValue>(
