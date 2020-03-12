@@ -373,7 +373,7 @@ namespace Eliah {
         }
         
         [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
-        private void MaybeCheckRI(string reason) // TODO: also validate Count
+        private void MaybeCheckRI(string reason)
         {
             var count = 0;
             
