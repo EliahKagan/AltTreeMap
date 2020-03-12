@@ -243,12 +243,13 @@ namespace Eliah {
             if (next != node.Right) {
                 next.Parent.Left = next.Right;
                 if (next.Right != null) next.Right.Parent = next.Parent;
+                next.Right = node.Right;
+                next.Right.Parent = next;
             }
             
             next.Left = node.Left;
             next.Left.Parent = next;
             next.Parent = node.Parent;
-            
             return next;
         }
         
