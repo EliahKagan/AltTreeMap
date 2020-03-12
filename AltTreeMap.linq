@@ -443,6 +443,12 @@ namespace Eliah {
     internal static class UnitTest {
         private static void Main()
         {
+            RunGeneralTests();
+            RunDeletionTest();
+        }
+    
+        private static void RunGeneralTests()
+        {
             var tree = new AltTreeMap<string, int> {
                 { "foo", 10 },
                 { "bar", 20 },
@@ -530,5 +536,24 @@ namespace Eliah {
             else
                 "".Dump($"key \"{key}\" not found to remove");
         }
+        
+        private static void RunDeletionTest()
+        {
+            var random = new Random();
+            var a = Enumerable.Range(0, 100).ToArray();
+            random.Shuffle(a);
+            string.Join(", ", a).Dump("Shuffled values.");
+            Array.Sort(a);
+            string.Join(", ", a).Dump("System-sorted values.");
+        }
+        
+        private static void Shuffle<T>(this Random random, IList<T> items)
+        {
+            for (var right = items.Count; right > 1; --right)
+                items.Swap(random.Next(right), right - 1);
+        }
+        
+        private static void Swap<T>(this IList<T> items, int i, int j)
+            => (items[i], items[j]) = (items[j], items[i]);
     }
 }
