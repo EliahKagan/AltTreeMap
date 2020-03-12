@@ -442,10 +442,8 @@ namespace Eliah {
         private static void TestGetOrDefault<TKey, TValue>(
                 this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
         {
-            keys.Select(key => {
-                var value = tree.GetOrDefault(key);
-                return new { key, value };
-            }).Dump(nameof(TestGetOrDefault));
+            keys.Select(key => new { key, value = tree.GetOrDefault(key) })
+                .Dump(nameof(TestGetOrDefault));
         }
     }
 }
