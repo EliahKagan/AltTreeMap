@@ -574,11 +574,16 @@ namespace Eliah {
         private static void TestDeletionBig(Random random)
         {
             var primes = random.GetPrimes(10_000_000);
+            
             var lows = primes.Select(kv => kv.Key).Take(100);
             string.Join(", ", lows).Dump("very lowest primes");
+            
             var highs = primes.Reverse().Select(kv => kv.Key)
                               .Take(100).Reverse();
             string.Join(", ", highs).Dump("fairly low primes");
+            
+            // TODO: Automatically run the Ruby script to generate primes
+            //       in this full range, compare them, and report results.
         }
         
         private static AltTreeMap<long, int?>
