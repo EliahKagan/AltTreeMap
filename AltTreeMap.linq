@@ -573,17 +573,38 @@ namespace Eliah {
         [Conditional("BIG_TESTS")]
         private static void TestDeletionBig(Random random)
         {
-            var primes = random.GetPrimes(10_000_000);
+            const long upper_bound = 10_000_000L;
+        
+            var primes = random.GetPrimes(upper_bound);
+            var known = GetPrimesFromRuby(upper_bound);
             
-            var lows = primes.Select(kv => kv.Key).Take(100);
-            string.Join(", ", lows).Dump("very lowest primes");
+            CheckMargins(primes, known);
+            
+            if (primes.Count != known.Length) {
+                new { Found = primes.Count, Actual = known.Length }
+                    .Dump("Found the WRONG number of primes!");
+            } else {
+                primes.Select(kv => kv.Key).SequenceEqual(known)
+                      .Dump("The primes we foun are the correct values?");
+            }
+        }
+        
+        private static void
+        CheckMargins<TValue>(AltTreeMap<long, TValue> primes, long[] known)
+        {
+            const int margin = 100;
+            
+            static string Check<T>(IEnumerable<T> lhs, IEnumerable<T> rhs)
+                => lhs.SequenceEqual(rhs) ? "correct" : "WRONG!!!";
+            
+            var lows = primes.Select(kv => kv.Key).Take(margin).ToArray();
+            var low_info = Check(lows, known[..margin]);
+            string.Join(", ", lows).Dump($"very lowest primes, {low_info}");
             
             var highs = primes.Reverse().Select(kv => kv.Key)
-                              .Take(100).Reverse();
-            string.Join(", ", highs).Dump("fairly low primes");
-            
-            // TODO: Automatically run the Ruby script to generate primes
-            //       in this full range, compare them, and report results.
+                              .Take(margin).Reverse().ToArray();
+            var high_info = Check(highs, known[^margin..])
+            string.Join(", ", highs).Dump($"fairly low primes, {high_info}");
         }
         
         private static AltTreeMap<long, int?>
@@ -633,5 +654,58 @@ namespace Eliah {
         
         private static void Swap<T>(this IList<T> items, int i, int j)
             => (items[i], items[j]) = (items[j], items[i]);
+        
+        private static long[] GetPrimesFromRuby(long upperBound)
+        {
+            const string interpreter = "ruby";
+            const string scriptName = "primes.rb";
+            var argument = upperBound.ToString();
+            var cmdline = $"{interpreter} {scriptName} {argument}";
+        
+            var (status, stdout, stderr) =
+                    RunScript(interpreter, scriptName, argument);
+            
+            if (!string.IsNullOrWhiteSpace(stderr))
+                stderr.Dump($"\"{cmdline}\" standard error stream");
+            
+            if (status != 0) {
+                throw new Exception(
+                        $"\"{cmdline}\" failed with exit code {status}.");
+            }
+            
+            var tokens = stdout.Split(default(char[]?),
+                                      StringSplitOptions.RemoveEmptyEntries);
+            return Array.ConvertAll(tokens, long.Parse);
+        }
+        
+        private static (int status, string stdout, string stderr)
+        RunScript(string interpreter, string scriptName, params string[] args)
+        {
+            var scriptPath = Path.Combine(GetScriptDirectory(), scriptName);
+            
+            var proc = new Process();
+            
+            foreach (var arg in args.Prepend(scriptName))
+                proc.StartInfo.ArgumentList.Add(arg);
+            
+            proc.StartInfo.CreateNoWindow = true;
+            proc.StartInfo.FileName = interpreter;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.UseShellExecute = false;
+            
+            proc.Start();
+            proc.WaitForExit();
+            
+            var stdout = proc.StandardOutput.ReadToEnd();
+            var stderr = proc.StandardError.ReadToEnd();
+            return (proc.ExitCode, stdout, stderr);
+        }
+        
+        private static string GetScriptDirectory()
+            => Path.GetDirectoryName(Util.CurrentQueryPath)
+                ?? throw new FileNotFoundException(
+                    message: "Can't guess script location - "
+                             + "is this an unsaved LINQPad query?");
     }
 }
