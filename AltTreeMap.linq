@@ -603,7 +603,7 @@ namespace Eliah {
             
             var highs = primes.Reverse().Select(kv => kv.Key)
                               .Take(margin).Reverse().ToArray();
-            var high_info = Check(highs, known[^margin..])
+            var high_info = Check(highs, known[^margin..]);
             string.Join(", ", highs).Dump($"fairly low primes, {high_info}");
         }
         
@@ -660,17 +660,19 @@ namespace Eliah {
             const string interpreter = "ruby";
             const string scriptName = "primes.rb";
             var argument = upperBound.ToString();
-            var cmdline = $"{interpreter} {scriptName} {argument}";
+            
+            string CmdLine()
+                => $"{interpreter} {GetScriptPath(scriptName)} {argument}";
         
             var (status, stdout, stderr) =
                     RunScript(interpreter, scriptName, argument);
             
             if (!string.IsNullOrWhiteSpace(stderr))
-                stderr.Dump($"\"{cmdline}\" standard error stream");
+                stderr.Dump($"\"{CmdLine()}\" standard error stream");
             
             if (status != 0) {
                 throw new Exception(
-                        $"\"{cmdline}\" failed with exit code {status}.");
+                        $"\"{CmdLine()}\" failed with exit code {status}.");
             }
             
             var tokens = stdout.Split(default(char[]?),
@@ -681,11 +683,9 @@ namespace Eliah {
         private static (int status, string stdout, string stderr)
         RunScript(string interpreter, string scriptName, params string[] args)
         {
-            var scriptPath = Path.Combine(GetScriptDirectory(), scriptName);
-            
             var proc = new Process();
             
-            foreach (var arg in args.Prepend(scriptName))
+            foreach (var arg in args.Prepend(GetScriptPath(scriptName)))
                 proc.StartInfo.ArgumentList.Add(arg);
             
             proc.StartInfo.CreateNoWindow = true;
@@ -701,6 +701,9 @@ namespace Eliah {
             var stderr = proc.StandardError.ReadToEnd();
             return (proc.ExitCode, stdout, stderr);
         }
+        
+        private static string GetScriptPath(string scriptName)
+            => Path.Combine(GetScriptDirectory(), scriptName);
         
         private static string GetScriptDirectory()
             => Path.GetDirectoryName(Util.CurrentQueryPath)
