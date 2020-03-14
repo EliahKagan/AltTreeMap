@@ -585,7 +585,7 @@ namespace Eliah {
                     .Dump("Found the WRONG number of primes!");
             } else {
                 primes.Select(kv => kv.Key).SequenceEqual(known)
-                      .Dump("The primes we foun are the correct values?");
+                      .Dump("The primes we found are the correct values?");
             }
         }
         
@@ -694,11 +694,12 @@ namespace Eliah {
             proc.StartInfo.RedirectStandardOutput = true;
             proc.StartInfo.UseShellExecute = false;
             
+            // FIXME: Seems to work, but what is the actual proper order?
             proc.Start();
-            proc.WaitForExit();
-            
             var stdout = proc.StandardOutput.ReadToEnd();
             var stderr = proc.StandardError.ReadToEnd();
+            proc.WaitForExit();
+            
             return (proc.ExitCode, stdout, stderr);
         }
         
