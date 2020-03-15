@@ -585,7 +585,7 @@ namespace Eliah {
                     .Dump("Found the WRONG number of primes!");
             } else {
                 primes.Select(kv => kv.Key).SequenceEqual(known)
-                      .Dump("The primes we found are the correct values?");
+                      .Dump("The primes we found are ALL the correct values?");
             }
         }
         
