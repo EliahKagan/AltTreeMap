@@ -2,6 +2,7 @@
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
+  <Namespace>System.Threading.Tasks</Namespace>
 </Query>
 
 //#define VERBOSE_DEBUGGING
@@ -10,6 +11,10 @@
 #define BIG_TESTS
 
 namespace Eliah {
+    internal static class Configuration {
+        internal const bool EnableBigTests = true;
+    }
+
     public sealed class AltTreeMap<TKey, TValue>
             : IEnumerable<KeyValuePair<TKey, TValue>> {
         public AltTreeMap() : this(Comparer<TKey>.Default) { }
@@ -440,10 +445,10 @@ namespace Eliah {
     }
     
     internal static class UnitTest {
-        private static void Main()
+        private static async Task Main()
         {
             RunGeneralTests();
-            RunDeletionTests();
+            await RunDeletionTests();
         }
     
         private static void RunGeneralTests()
@@ -538,11 +543,11 @@ namespace Eliah {
                 "".Dump($"key \"{key}\" not found to remove");
         }
         
-        private static void RunDeletionTests()
+        private static async Task RunDeletionTests()
         {
             var random = new Random();
             TestDeletionSmall(random);
-            TestDeletionBig(random);
+            if (Configuration.EnableBigTests) await TestDeletionBig(random);
         }
         
         private static void TestDeletionSmall(Random random)
@@ -570,13 +575,13 @@ namespace Eliah {
             string.Join(", ", window).Dump("right side");
         }
         
-        [Conditional("BIG_TESTS")]
-        private static void TestDeletionBig(Random random)
+        private static async Task TestDeletionBig(Random random)
         {
             const long upper_bound = 10_000_000L;
         
+            var known_task = GetPrimesFromRuby(upper_bound);
             var primes = random.GetPrimes(upper_bound);
-            var known = GetPrimesFromRuby(upper_bound);
+            var known = await known_task;
             
             CheckMargins(primes, known);
             
@@ -655,7 +660,7 @@ namespace Eliah {
         private static void Swap<T>(this IList<T> items, int i, int j)
             => (items[i], items[j]) = (items[j], items[i]);
         
-        private static long[] GetPrimesFromRuby(long upperBound)
+        private static async Task<long[]> GetPrimesFromRuby(long upperBound)
         {
             const string interpreter = "ruby";
             const string scriptName = "primes.rb";
@@ -665,7 +670,7 @@ namespace Eliah {
                 => $"{interpreter} {GetScriptPath(scriptName)} {argument}";
         
             var (status, stdout, stderr) =
-                    RunScript(interpreter, scriptName, argument);
+                    await RunScript(interpreter, scriptName, argument);
             
             if (!string.IsNullOrWhiteSpace(stderr))
                 stderr.Dump($"\"{CmdLine()}\" standard error stream");
@@ -680,7 +685,7 @@ namespace Eliah {
             return Array.ConvertAll(tokens, long.Parse);
         }
         
-        private static (int status, string stdout, string stderr)
+        private static async Task<(int status, string stdout, string stderr)>
         RunScript(string interpreter, string scriptName, params string[] args)
         {
             var proc = new Process();
@@ -694,13 +699,12 @@ namespace Eliah {
             proc.StartInfo.RedirectStandardOutput = true;
             proc.StartInfo.UseShellExecute = false;
             
-            // FIXME: Seems to work, but what is the actual proper order?
             proc.Start();
-            var stdout = proc.StandardOutput.ReadToEnd();
-            var stderr = proc.StandardError.ReadToEnd();
+            var stdout = proc.StandardOutput.ReadToEndAsync();
+            var stderr = proc.StandardError.ReadToEndAsync();
             proc.WaitForExit();
             
-            return (proc.ExitCode, stdout, stderr);
+            return (proc.ExitCode, await stdout, await stderr);
         }
         
         private static string GetScriptPath(string scriptName)
