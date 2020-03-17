@@ -18,6 +18,8 @@ namespace Eliah {
 
     public sealed class AltTreeMap<TKey, TValue>
             : IEnumerable<KeyValuePair<TKey, TValue>> {
+        public delegate void ValueMutator(TKey key, ref TValue value);
+        
         public AltTreeMap() : this(Comparer<TKey>.Default) { }
         
         public AltTreeMap(IComparer<TKey> comparer)
@@ -116,10 +118,22 @@ namespace Eliah {
                 action(node.Key, node.Value);
         }
         
+        public void ForEach(ValueMutator action)
+        {
+            foreach (var node in GetNodesInOrder())
+                action(node.Key, ref node.Value);
+        }
+        
         public void ForEachReverse(Action<TKey, TValue> action)
         {
             foreach (var node in GetNodesInReverseOrder())
                 action(node.Key, node.Value);
+        }
+        
+        public void ForEachReverse(ValueMutator action)
+        {
+            foreach (var node in GetNodesInReverseOrder())
+                action(node.Key, ref node.Value);
         }
         
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -191,9 +205,9 @@ namespace Eliah {
                 Right = right;
             }
             
-            internal TKey Key { get; }
+            internal readonly TKey Key;
             
-            internal TValue Value { get; set; }
+            internal TValue Value;
             
             internal KeyValuePair<TKey, TValue> Mapping
                 => KeyValuePair.Create(Key, Value);
