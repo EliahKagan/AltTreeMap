@@ -522,9 +522,10 @@ namespace Eliah {
         private static void TestTryGetValue<TKey, TValue>(
                 this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
         {
-            keys.Select(key => {
-                var result = tree.TryGetValue(key, out var value);
-                return new { key, result, value };
+            keys.Select(key => new {
+                key,
+                result = tree.TryGetValue(key, out var value),
+                value
             }).Dump(nameof(TestTryGetValue));
         }
         
