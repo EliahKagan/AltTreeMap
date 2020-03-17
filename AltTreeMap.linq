@@ -741,6 +741,8 @@ namespace Eliah {
             return new Random(BitConverter.ToInt32(buffer, 0));
         }
     
+        // RNGCryptoServiceProvider is thread-safe (unlike Random), so use it
+        // to generate seeds for the Random instances local to each thread.
         private static RNGCryptoServiceProvider _csprng =
             new RNGCryptoServiceProvider();
         
