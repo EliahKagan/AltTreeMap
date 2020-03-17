@@ -2,6 +2,7 @@
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
+  <Namespace>System.Security.Cryptography</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
 </Query>
 
@@ -545,19 +546,17 @@ namespace Eliah {
         
         private static async Task RunDeletionTests()
         {
-            var random = new Random();
-            TestDeletionSmall(random);
-            if (Configuration.EnableBigTests) await TestDeletionBig(random);
+            TestDeletionSmall();
+            if (Configuration.EnableBigTests) await TestDeletionBig();
         }
         
-        private static void TestDeletionSmall(Random random)
+        private static void TestDeletionSmall()
         {
             const int window_size = 20;
             const int total_size = 100;
             const int outside_window_size = total_size - window_size;
             
-            var permutation = Enumerable.Range(0, total_size).ToArray();
-            random.Shuffle(permutation);
+            var permutation = Enumerable.Range(0, total_size).Shuffle();
             
             var window = new AltTreeMap<int, int>();
             
@@ -575,12 +574,12 @@ namespace Eliah {
             string.Join(", ", window).Dump("right side");
         }
         
-        private static async Task TestDeletionBig(Random random)
+        private static async Task TestDeletionBig()
         {
             const long upper_bound = 10_000_000L;
         
             var known_task = GetPrimesFromRuby(upper_bound);
-            var primes = random.GetPrimes(upper_bound);
+            var primes = GetPrimes(upper_bound);
             var known = await known_task;
             
             CheckMargins(primes, known);
@@ -612,10 +611,9 @@ namespace Eliah {
             string.Join(", ", highs).Dump($"fairly low primes, {high_info}");
         }
         
-        private static AltTreeMap<long, int?>
-        GetPrimes(this Random random, long upperBound)
+        private static AltTreeMap<long, int?> GetPrimes(long upperBound)
         {
-            var primes = random.GetShuffledOdds(3L, upperBound);
+            var primes = GetShuffledOdds(3L, upperBound);
             primes.Add(2L, null);
             
             checked {
@@ -629,7 +627,7 @@ namespace Eliah {
         }
         
         private static AltTreeMap<long, int?>
-        GetShuffledOdds(this Random random, long fromInclusive, long toInclusive)
+        GetShuffledOdds(long fromInclusive, long toInclusive)
         {
             if (fromInclusive % 2L == 0L) {
                 checked {
@@ -643,22 +641,10 @@ namespace Eliah {
                     yield return odd;
             }
             
-            var seq = GetOdds().ToList();
-            random.Shuffle(seq);
-            
             var odds = new AltTreeMap<long, int?>();
-            seq.ForEach(odd => odds.Add(odd, null));
+            foreach (var odd in GetOdds().Shuffle()) odds.Add(odd, null);
             return odds;
         }
-        
-        private static void Shuffle<T>(this Random random, IList<T> items)
-        {
-            for (var right = items.Count; right > 1; --right)
-                items.Swap(random.Next(right), right - 1);
-        }
-        
-        private static void Swap<T>(this IList<T> items, int i, int j)
-            => (items[i], items[j]) = (items[j], items[i]);
         
         private static async Task<long[]> GetPrimesFromRuby(long upperBound)
         {
@@ -715,5 +701,50 @@ namespace Eliah {
                 ?? throw new FileNotFoundException(
                     message: "Can't guess script location - "
                              + "is this an unsaved LINQPad query?");
+    }
+    
+    internal static class ListExtensions {
+        internal static IList<T> Shuffle<T>(this IEnumerable<T> items)
+            => items.ToList().Shuffle();
+    
+        internal static IList<T> Shuffle<T>(this IList<T> items)
+        {
+            for (var right = items.Count; right > 1; --right)
+                items.Swap(ThreadSafeRandom.Next(right), right - 1);
+            
+            return items;
+        }
+    
+        internal static void Swap<T>(this IList<T> items, int i, int j)
+            => (items[i], items[j]) = (items[j], items[i]);
+    }
+    
+    internal static class ThreadSafeRandom {
+        internal static int Next() => Prng.Next();
+        
+        internal static int Next(int maxValue) => Prng.Next(maxValue);
+        
+        internal static int Next(int minValue, int maxValue)
+            => Prng.Next(minValue, maxValue);
+        
+        internal static void NextBytes(byte[] buffer)
+            => Prng.NextBytes(buffer);
+        
+        internal static double NextDouble() => Prng.NextDouble();
+    
+        private static Random Prng => _prng.Value!;
+        
+        private static Random CreatePrng()
+        {
+            var buffer = new byte[sizeof(int)];
+            _csprng.GetBytes(buffer);
+            return new Random(BitConverter.ToInt32(buffer, 0));
+        }
+    
+        private static RNGCryptoServiceProvider _csprng =
+            new RNGCryptoServiceProvider();
+        
+        private static ThreadLocal<Random> _prng =
+            new ThreadLocal<Random>(CreatePrng);
     }
 }
