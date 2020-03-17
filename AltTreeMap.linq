@@ -488,7 +488,7 @@ namespace Eliah {
             tree.Reverse()
                 .Dump($"after clearing, size {tree.Count} (reversed)");
             
-            copy.Dump($"{nameof(copy)}, after changes original {nameof(tree)}");
+            copy.Dump($"{nameof(copy)}, after changes to {nameof(tree)}");
             copy.Clear();
             copy.Dump($"{nameof(copy)}, after itself being cleared");
         }
