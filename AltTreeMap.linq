@@ -636,7 +636,7 @@ namespace Eliah {
             };
             
             known.Select(kv => kv.Key) // TODO: Use known.Keys instead.
-                 .Shuffle() // To perhaps reveal some lookup-sensitive bugs.
+                 .Shuffle() // Might smoke out lookup-order-sensitive bugs.
                  .Select(prime => {
                         var pi = primes[prime];
                         var correct = pi == known[prime];
