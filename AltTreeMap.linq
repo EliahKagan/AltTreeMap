@@ -466,6 +466,13 @@ namespace Eliah {
     internal static class UnitTest {
         private static async Task Main()
         {
+            TheTerms.ShowTop();
+            await RunAllEnabledTests();
+            TheTerms.ShowBottom();
+        }
+        
+        private static async Task RunAllEnabledTests()
+        {
             RunGeneralTests();
             TestDeletionSmall();
             await MaybeRunBigTests();
@@ -762,6 +769,20 @@ namespace Eliah {
                 ?? throw new FileNotFoundException(
                     message: "Can't guess script location - "
                              + "is this an unsaved LINQPad query?");
+    }
+    
+    internal static class TheTerms {
+        internal static void ShowTop()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       BEFORE (other) query results.
+        }
+        
+        internal static void ShowBottom()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       AFTER (other) query results.
+        }
     }
     
     internal static class ListExtensions {
