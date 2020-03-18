@@ -622,24 +622,28 @@ namespace Eliah {
             // when values, taken in key order, are monotone relative to some
             // comparator), include non-primes here and make test show their
             // pi values as well.
-            var some_primes = new[] {
-                    17,
-                    31,
-                    1013,
-                    100_019,
-                    1_000_033,
-                    3_000_029,
-                    5_999_993,
-                    7_499_981,
-                    8_999_971,
-                    9_999_973
+            var known = new AltTreeMap<int, int> { // (prime, its pi value)...
+                    {        17,      7 },
+                    {        31,     11 },
+                    {      1013,    170 },
+                    {   100_019,   9594 },
+                    { 1_000_033, 78_500 },
+                    { 3_000_029, 216_818 },
+                    { 5_999_993, 412_849 },
+                    { 7_499_981, 508_261 },
+                    { 8_999_971, 602_487 },
+                    { 9_999_973, 664_578 },
             };
             
-            // I've shuffled lookups to reveal lookup-order-sensitive bugs.
-            some_primes.Shuffle()
-                       .Select(prime => new { prime, pi = primes[prime] })
-                       .OrderBy(row => row.prime)
-                       .Dump("some primes and the number of primes <= them");
+            known.Select(kv => kv.Key) // TODO: Use known.Keys instead.
+                 .Shuffle() // To perhaps reveal some lookup-sensitive bugs.
+                 .Select(prime => {
+                        var pi = primes[prime];
+                        var correct = pi == known[prime];
+                        return new { prime, pi, correct };
+                     })
+                 .OrderBy(row => row.prime)
+                 .Dump("some primes and their ordinals", noTotals: true);
         }
         
         private static void
