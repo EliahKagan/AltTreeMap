@@ -13,7 +13,7 @@
 
 namespace Eliah {
     internal static class Configuration {
-        internal const bool EnableBigTests = true;
+        internal static bool EnableBigTests => true;
     }
 
     public sealed class AltTreeMap<TKey, TValue>
@@ -463,7 +463,8 @@ namespace Eliah {
         private static async Task Main()
         {
             RunGeneralTests();
-            await RunDeletionTests();
+            TestDeletionSmall();
+            await MaybeRunBigTests();
         }
     
         private static void RunGeneralTests()
@@ -559,10 +560,12 @@ namespace Eliah {
                 "".Dump($"key \"{key}\" not found to remove");
         }
         
-        private static async Task RunDeletionTests()
+        private static async Task MaybeRunBigTests()
         {
-            TestDeletionSmall();
-            if (Configuration.EnableBigTests) await TestDeletionBig();
+            if (!Configuration.EnableBigTests) return;
+            
+            var primes = await TestDeletionBig();
+            TestRefForEach(primes);
         }
         
         private static void TestDeletionSmall()
@@ -589,7 +592,7 @@ namespace Eliah {
             string.Join(", ", window).Dump("right side");
         }
         
-        private static async Task TestDeletionBig()
+        private static async Task<AltTreeMap<long, int?>> TestDeletionBig()
         {
             const long upper_bound = 10_000_000L;
         
@@ -604,8 +607,39 @@ namespace Eliah {
                     .Dump("Found the WRONG number of primes!");
             } else {
                 primes.Select(kv => kv.Key).SequenceEqual(known)
-                      .Dump("The primes we found are ALL the correct values?");
+                      .Dump($"Were all {primes.Count} primes correct?");
             }
+            
+            return primes;
+        }
+        
+        private static void TestRefForEach(AltTreeMap<long, int?> primes)
+        {
+            var count = 0;
+            primes.ForEach((long key, ref int? value) => value = ++count);
+            
+            // TODO: After implementing AltTreeMap value bisection (usable
+            // when values, taken in key order, are monotone relative to some
+            // comparator), include non-primes here and make test show their
+            // pi values as well.
+            var some_primes = new[] {
+                    17,
+                    31,
+                    1013,
+                    100_019,
+                    1_000_033,
+                    3_000_029,
+                    5_999_993,
+                    7_499_981,
+                    8_999_971,
+                    9_999_973
+            };
+            
+            // I've shuffled lookups to reveal lookup-order-sensitive bugs.
+            some_primes.Shuffle()
+                       .Select(prime => new { prime, pi = primes[prime] })
+                       .OrderBy(row => row.prime)
+                       .Dump("some primes and the number of primes <= them");
         }
         
         private static void
