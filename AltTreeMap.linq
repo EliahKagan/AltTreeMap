@@ -6,6 +6,8 @@
   <Namespace>System.Threading.Tasks</Namespace>
 </Query>
 
+// AltTreeMap - A tree map implementation and some unit tests.
+
 //#define VERBOSE_DEBUGGING
 //#define DEBUG_REPRESENTATION_INVARIANTS
 //#define DEBUG_TOPOLOGY
