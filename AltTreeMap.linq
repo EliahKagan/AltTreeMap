@@ -222,16 +222,6 @@ namespace Eliah {
                 => new { Key, Value, Parent, Left, Right };
         }
         
-        /// <summary>Helper funtion for Note() and Warn().</summary>
-        /// <remarks>So we don't always have to use the Console.</remarks>
-        // TODO: Log(), Note(), and Warn() should really go outside AltTreeMap.
-        private static void Log(string message) => Console.WriteLine(message);
-        
-        [Conditional("VERBOSE_DEBUGGING")]
-        private static void Note(string message) => Log(message);
-        
-        private static void Warn(string message) => Log(message);
-        
         private static Node MinNode(Node node)
         {
             while (node.Left != null) node = node.Left;
@@ -407,11 +397,11 @@ namespace Eliah {
                 if (node.Left == null) return true;
                 
                 if (Comparer.Compare(node.Left.Key, node.Key) >= 0)
-                    Warn("Left child key not less than parent.");
+                    Log.Warn("Left child key not less than parent.");
                 else if (node.Left.Parent != node)
-                    Warn("Left child has incorrect parent reference.");
+                    Log.Warn("Left child has incorrect parent reference.");
                 else if (!Check(node.Left))
-                    Warn("LEFT subtree contains invariant violation.");
+                    Log.Warn("LEFT subtree contains invariant violation.");
                 else return true;
                 
                 return false;
@@ -422,30 +412,30 @@ namespace Eliah {
                 if (node.Right == null) return true;
                 
                 if (Comparer.Compare(node.Key, node.Right.Key) >= 0)
-                    Warn("Right child key not greater than parent.");
+                    Log.Warn("Right child key not greater than parent.");
                 else if (node.Right.Parent != node)
-                    Warn("Right child has incorrect parent reference.");
+                    Log.Warn("Right child has incorrect parent reference.");
                 else if (!Check(node.Right))
-                    Warn("RIGHT subtree contains invariant violation.");
+                    Log.Warn("RIGHT subtree contains invariant violation.");
                 else return true;
                 
                 return false;
             }
             
-            Note($"Checking RI because: {reason}");
+            Log.Note($"Checking RI because: {reason}");
             
             if (_root == null && Count == 0)
-                Note("Representation invariants OK. Tree is empty.");
+                Log.Note("Representation invariants OK. Tree is empty.");
             else if (_root == null) // Count != 0
-                Warn($"_root is null but Count is {Count}!");
+                Log.Warn($"_root is null but Count is {Count}!");
             else if (_root.Parent != null)
-                Warn("The root of the tree thinks it has a parent node!");
+                Log.Warn("The root of the tree thinks it has a parent node!");
             else if (!Check(_root))
-                Warn("Representation invariant(s) VIOLATED!");
+                Log.Warn("Representation invariant(s) VIOLATED!");
             else if (count != Count)
-                Warn($"Tree has {count} nodes but thinks it has {Count}!");
+                Log.Warn($"Tree has {count} nodes but thinks it has {Count}!");
             else
-                Note("Representation invariants seem OK.");
+                Log.Note("Representation invariants seem OK.");
         }
         
         [Conditional("DEBUG_TOPOLOGY")]
@@ -457,6 +447,19 @@ namespace Eliah {
         private Node? _root = null;
         
         private ulong _version = 0uL;
+    }
+    
+    /// <summary>Simple logger for printing debug information.</summary>
+    /// <remarks>TODO: Use a real logging library instead.</remarks>
+    internal static class Log {
+        internal static void Warn(string message) => Print(message);
+        
+        [Conditional("VERBOSE_DEBUGGING")]
+        internal static void Note(string message) => Print(message);
+        
+        /// <summary>Logs the message in some default manner.</summary>
+        private static void Print(string message)
+            => Console.WriteLine(message);
     }
     
     internal static class UnitTest {
