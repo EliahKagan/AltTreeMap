@@ -607,7 +607,7 @@ namespace Eliah {
                     .Dump("Found the WRONG number of primes!");
             } else {
                 primes.Select(kv => kv.Key).SequenceEqual(known)
-                      .Dump($"Were all {primes.Count} primes correct?");
+                      .Dump($"Were all {primes.Count:N0} primes correct?");
             }
             
             return primes;
@@ -618,16 +618,20 @@ namespace Eliah {
             var count = 0;
             primes.ForEach((long key, ref int? value) => value = ++count);
             
+            // The known values for these and other primes could come from the
+            // output of the Ruby script. Listing them here provides a tiny bit
+            // of redundancy in the face of possible bugs in that script.
+            //
             // TODO: After implementing AltTreeMap value bisection (usable
             // when values, taken in key order, are monotone relative to some
             // comparator), include non-primes here and make test show their
             // pi values as well.
             var known = new AltTreeMap<int, int> { // (prime, its pi value)...
-                    {        17,      7 },
-                    {        31,     11 },
-                    {      1013,    170 },
-                    {   100_019,   9594 },
-                    { 1_000_033, 78_500 },
+                    {        17,       7 },
+                    {        31,      11 },
+                    {      1013,     170 },
+                    {   100_019,    9594 },
+                    { 1_000_033,  78_500 },
                     { 3_000_029, 216_818 },
                     { 5_999_993, 412_849 },
                     { 7_499_981, 508_261 },
