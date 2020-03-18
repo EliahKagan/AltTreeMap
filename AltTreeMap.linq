@@ -11,7 +11,6 @@
 //#define VERBOSE_DEBUGGING
 //#define DEBUG_REPRESENTATION_INVARIANTS
 //#define DEBUG_TOPOLOGY
-#define BIG_TESTS
 
 namespace Eliah {
     internal static class Configuration {
