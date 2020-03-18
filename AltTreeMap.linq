@@ -8,6 +8,21 @@
 
 // AltTreeMap - A tree map implementation and some unit tests.
 
+// TERMS OF USE
+//
+// This version of the code of AltTreeMap and its unit tests may be built to
+// use the Wolfram|Alpha API to obtain some information used in the tests. To
+// turn this on (or off), make Configuration.EnableWolframAlpha return true (or
+// false). Use of Wolfram|Alpha, including via this application, is subject to
+// the Wolfram|Alpha Terms of Use: https://www.wolframalpha.com/termsofuse/
+//
+// Results and information from this site are not a certified or definitive
+// source of information that can be relied on for legal, financial, medical,
+// life-safety or any other critical purposes.
+//
+// See also the Wolfram|Alpha API Terms of Use:
+// https://products.wolframalpha.com/api/termsofuse.html
+
 //#define VERBOSE_DEBUGGING
 //#define DEBUG_REPRESENTATION_INVARIANTS
 //#define DEBUG_TOPOLOGY
@@ -16,6 +31,7 @@
 namespace Eliah {
     internal static class Configuration {
         internal static bool EnableBigTests => true;
+        internal static bool EnableWolframAlpha => true;
     }
 
     public sealed class AltTreeMap<TKey, TValue>
