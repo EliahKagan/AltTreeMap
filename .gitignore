@@ -1,1 +1,5 @@
+# Wolfram|Alpha AppID disclosure is restricted, so don't track it with git.
+/AppID
+
+# Output from (some versions of) the Ruby prime numbers script.
 /primes.txt
