@@ -1,0 +1,14 @@
+Application name
+================
+
+Experiments in enhancing .NET unit tests (AltTreeMap)
+
+
+Description
+===========
+
+.NET unit tests for small libraries and other code.
+
+AltTreeMap is a C# library that provides a tree-based implementation of an ordered associative array. It is experimental; one of its purposes is to explore strategies in unit testing and integration testing, including the incorporation of Wolfram|Alpha API calls as a secondary mechanism of producing or checking expected results.
+
+(The API is to be called in each test. Results of Wolfram|Alpha API calls are not cached.)
