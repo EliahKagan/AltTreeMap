@@ -737,10 +737,10 @@ namespace Eliah {
             var argument = upperBound.ToString();
             
             string CmdLine()
-                => $"{interpreter} {GetScriptPath(scriptName)} {argument}";
+                => $"{interpreter} {Scripts.GetPath(scriptName)} {argument}";
         
             var (status, stdout, stderr) =
-                    await RunScript(interpreter, scriptName, argument);
+                    await Scripts.Run(interpreter, scriptName, argument);
             
             if (!string.IsNullOrWhiteSpace(stderr))
                 stderr.Dump($"\"{CmdLine()}\" standard error stream");
@@ -754,13 +754,15 @@ namespace Eliah {
                                       StringSplitOptions.RemoveEmptyEntries);
             return Array.ConvertAll(tokens, long.Parse);
         }
-        
-        private static async Task<(int status, string stdout, string stderr)>
-        RunScript(string interpreter, string scriptName, params string[] args)
+    }
+    
+    internal static class Scripts {
+        internal static async Task<(int status, string stdout, string stderr)>
+        Run(string interpreter, string scriptName, params string[] args)
         {
             var proc = new Process();
             
-            foreach (var arg in args.Prepend(GetScriptPath(scriptName)))
+            foreach (var arg in args.Prepend(GetPath(scriptName)))
                 proc.StartInfo.ArgumentList.Add(arg);
             
             proc.StartInfo.CreateNoWindow = true;
@@ -777,28 +779,14 @@ namespace Eliah {
             return (proc.ExitCode, await stdout, await stderr);
         }
         
-        private static string GetScriptPath(string scriptName)
-            => Path.Combine(GetScriptDirectory(), scriptName);
+        internal static string GetPath(string scriptName)
+            => Path.Combine(GetDirectory(), scriptName);
         
-        private static string GetScriptDirectory()
+        private static string GetDirectory()
             => Path.GetDirectoryName(Util.CurrentQueryPath)
                 ?? throw new FileNotFoundException(
                     message: "Can't guess script location - "
                              + "is this an unsaved LINQPad query?");
-    }
-    
-    internal static class TheTerms {
-        internal static void ShowTop()
-        {
-            // TODO: Put code here to show legal information that should appear
-            //       BEFORE (other) query results.
-        }
-        
-        internal static void ShowBottom()
-        {
-            // TODO: Put code here to show legal information that should appear
-            //       AFTER (other) query results.
-        }
     }
     
     internal static class ListExtensions {
@@ -846,5 +834,19 @@ namespace Eliah {
         
         private static ThreadLocal<Random> _prng =
             new ThreadLocal<Random>(CreatePrng);
+    }
+    
+    internal static class TheTerms {
+        internal static void ShowTop()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       BEFORE (other) query results.
+        }
+        
+        internal static void ShowBottom()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       AFTER (other) query results.
+        }
     }
 }
