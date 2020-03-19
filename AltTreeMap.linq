@@ -823,7 +823,7 @@ namespace Eliah {
     internal static class TheTerms {
         internal static void ShowTop()
         {
-            // FIXME: <p> test should get its spacing from CSS, not from <br/>
+            // FIXME: <p> content should get its spacing from CSS, not <br/>
             // tags. Look into this and the <strong> vs. <b> apperance issue.
             Util.RawHtml(GetTermsHtml().Replace("<p>", "<br/><p>")).Dump();
             Console.WriteLine();
