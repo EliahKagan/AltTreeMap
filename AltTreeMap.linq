@@ -773,20 +773,6 @@ namespace Eliah {
                              + "is this an unsaved LINQPad query?");
     }
     
-    internal static class TheTerms {
-        internal static void ShowTop()
-        {
-            // TODO: Put code here to show legal information that should appear
-            //       BEFORE (other) query results.
-        }
-        
-        internal static void ShowBottom()
-        {
-            // TODO: Put code here to show legal information that should appear
-            //       AFTER (other) query results.
-        }
-    }
-    
     internal static class ListExtensions {
         internal static IList<T> Shuffle<T>(this IEnumerable<T> items)
             => items.ToList().Shuffle();
@@ -832,5 +818,19 @@ namespace Eliah {
         
         private static ThreadLocal<Random> _prng =
             new ThreadLocal<Random>(CreatePrng);
+    }
+    
+    internal static class TheTerms {
+        internal static void ShowTop()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       BEFORE (other) query results.
+        }
+        
+        internal static void ShowBottom()
+        {
+            // TODO: Put code here to show legal information that should appear
+            //       AFTER (other) query results.
+        }
     }
 }
