@@ -839,14 +839,38 @@ namespace Eliah {
     internal static class TheTerms {
         internal static void ShowTop()
         {
-            // TODO: Put code here to show legal information that should appear
-            //       BEFORE (other) query results.
+            // FIXME: <p> and <strong> should get their formatting from CSS,
+            // not physical tags. Figure out how to get LINQPad to use a custom
+            // stylesheet (for an indiviual dumped result).
+            var html = GetTermsHtml().Replace("<p>", "<br/><p>")
+                                     .Replace("<strong>", "<strong><b>")
+                                     .Replace("</strong>", "</b></strong>");
+            
+            Util.RawHtml(html).Dump();
+            Console.WriteLine();
         }
         
         internal static void ShowBottom()
         {
-            // TODO: Put code here to show legal information that should appear
-            //       AFTER (other) query results.
+            var msg = $"See the top of the page for this software's {Name}.";
+            
+            var html = "<br/><hr/>"
+                        + $@"<p><a href=""#terms-heading"">{msg}</a></p>";
+            
+            Util.RawHtml(html).Dump();
         }
+        
+        private static string GetTermsHtml()
+            => Regex.Match(File.ReadAllText(Scripts.GetPath($"{Name}.html")),
+                           $@"{Guide("BEGIN")}(.+?){Guide("END")}",
+                           RegexOptions.Singleline)
+                    .Groups[1].ToString();
+        
+        private static string Guide(string command)
+            => Regex.Escape($@"<!-- {GuideIntroducer}: {command} -->");
+        
+        private const string Name = "Terms of Use";
+        
+        private const string GuideIntroducer = "EXTRACTION FOR IN-APP DISPLAY";
     }
 }
