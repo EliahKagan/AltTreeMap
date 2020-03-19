@@ -823,28 +823,32 @@ namespace Eliah {
     internal static class TheTerms {
         internal static void ShowTop()
         {
-            const string name = "Terms of Use";
-            
-            var full = File.ReadAllText(Scripts.GetPath($"{name}.html"));
-            
-            string Guide(string command)
-                => Regex.Escape(
-                        $@"<!-- EXTRACTION FOR IN-APP DISPLAY: {command} -->");
-            
-            var pattern = $@"{Guide("BEGIN")}(.+?){Guide("END")}";
-            
-            var part = Regex.Match(full, pattern, RegexOptions.Singleline)
-                            .Groups[1].ToString();
-            
-            Util.RawHtml(part).Dump(name.ToUpper());
-            
+            // FIXME: <p> test should get its spacing from CSS, not from <br/>
+            // tags. Look into this and the <strong> vs. <b> apperance issue.
+            Util.RawHtml(GetTermsHtml().Replace("<p>", "<br/><p>")).Dump();
             Console.WriteLine();
         }
         
         internal static void ShowBottom()
         {
-            // TODO: Put code here to show legal information that should appear
-            //       AFTER (other) query results.
+            var msg = $"See the top of the page for this software's {Name}.";
+            
+            var html = "<br/><hr/>"
+                        + $@"<p><a href=""#terms-heading"">{msg}</a></p>";
+            
+            Util.RawHtml(html).Dump();
         }
+        
+        private const string Name = "Terms of Use";
+        
+        private static string GetTermsHtml()
+            => Regex.Match(File.ReadAllText(Scripts.GetPath($"{Name}.html")),
+                           $@"{Guide("BEGIN")}(.+?){Guide("END")}",
+                           RegexOptions.Singleline)
+                    .Groups[1].ToString();
+        
+        private static string Guide(string command)
+            => Regex.Escape(
+                $@"<!-- EXTRACTION FOR IN-APP DISPLAY: {command} -->");
     }
 }
