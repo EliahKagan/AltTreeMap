@@ -823,9 +823,14 @@ namespace Eliah {
     internal static class TheTerms {
         internal static void ShowTop()
         {
-            // FIXME: <p> content should get its spacing from CSS, not <br/>
-            // tags. Look into this and the <strong> vs. <b> apperance issue.
-            Util.RawHtml(GetTermsHtml().Replace("<p>", "<br/><p>")).Dump();
+            // FIXME: <p> and <strong> should get their formatting from CSS,
+            // not physical tags. Figure out how to get LINQPad to use a custom
+            // stylesheet (for an indiviual dumped result).
+            var html = GetTermsHtml().Replace("<p>", "<br/><p>")
+                                     .Replace("<strong>", "<strong><b>")
+                                     .Replace("</strong>", "</b></strong>");
+            
+            Util.RawHtml(html).Dump();
             Console.WriteLine();
         }
         
@@ -839,8 +844,6 @@ namespace Eliah {
             Util.RawHtml(html).Dump();
         }
         
-        private const string Name = "Terms of Use";
-        
         private static string GetTermsHtml()
             => Regex.Match(File.ReadAllText(Scripts.GetPath($"{Name}.html")),
                            $@"{Guide("BEGIN")}(.+?){Guide("END")}",
@@ -848,7 +851,10 @@ namespace Eliah {
                     .Groups[1].ToString();
         
         private static string Guide(string command)
-            => Regex.Escape(
-                $@"<!-- EXTRACTION FOR IN-APP DISPLAY: {command} -->");
+            => Regex.Escape($@"<!-- {GuideIntroducer}: {command} -->");
+        
+        private const string Name = "Terms of Use";
+        
+        private const string GuideIntroducer = "EXTRACTION FOR IN-APP DISPLAY";
     }
 }
