@@ -823,8 +823,22 @@ namespace Eliah {
     internal static class TheTerms {
         internal static void ShowTop()
         {
-            // TODO: Put code here to show legal information that should appear
-            //       BEFORE (other) query results.
+            const string name = "Terms of Use";
+            
+            var full = File.ReadAllText(Scripts.GetPath($"{name}.html"));
+            
+            string Guide(string command)
+                => Regex.Escape(
+                        $@"<!-- EXTRACTION FOR IN-APP DISPLAY: {command} -->");
+            
+            var pattern = $@"{Guide("BEGIN")}(.+?){Guide("END")}";
+            
+            var part = Regex.Match(full, pattern, RegexOptions.Singleline)
+                            .Groups[1].ToString();
+            
+            Util.RawHtml(part).Dump(name.ToUpper());
+            
+            Console.WriteLine();
         }
         
         internal static void ShowBottom()
