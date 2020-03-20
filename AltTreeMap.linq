@@ -687,7 +687,7 @@ namespace Eliah {
                         string ORLY;
                         if (row.knownPi != knownPi2)
                             ORLY = "NO WAI!!";
-                        else if (row.pi == row.knownPi)
+                        else if (row.pi == knownPi2)
                             ORLY = "ya rly";
                         else
                             ORLY = "NO RLY";
