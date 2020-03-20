@@ -658,51 +658,42 @@ namespace Eliah {
             // when values, taken in key order, are monotone relative to some
             // comparator), include non-primes here and make test show their
             // pi values as well.
-            var known = new AltTreeMap<int, int> { // (prime, its pi value)...
-                    {        17,       7 },
-                    {        31,      11 },
-                    {      1013,     170 },
-                    {   100_019,    9594 },
-                    { 1_000_033,  78_500 },
-                    { 3_000_029, 216_818 },
-                    { 5_999_993, 412_849 },
-                    { 7_499_981, 508_261 },
-                    { 8_999_971, 602_487 },
-                    { 9_999_973, 664_578 },
+            var known = new (int prime, int knownPi)[] {
+                    (       17,       7),
+                    (       31,      11),
+                    (     1013,     170),
+                    (  100_019,    9594),
+                    (1_000_033,  78_500),
+                    (3_000_029, 216_818),
+                    (5_999_993, 412_849),
+                    (7_499_981, 508_261),
+                    (8_999_971, 602_487),
+                    (9_999_973, 664_578),
             };
             
             // TODO: When the local test is much more involved than now,
             // we can do it and await Wolfram|Alpha results at the same time.
-            // TODO: Use known.Keys instead of known.Select(kv => kv.Key).
-            var wolframResults = await known.Select(kv => kv.Key)
+            var wolframResults = await known.Select(kv => kv.prime)
                                             .WolframAlphaSelect("PrimePI");
             
-            // FIXME: Use enumerable-of-tuples constructor instead of all this.
-            var known2 = ((Func<AltTreeMap<int, int>>)(() => {
-                var tree = new AltTreeMap<int, int>();
-                var entries = known.Select(kv => kv.Key) // TODO: known.Keys
-                                   .Zip(wolframResults.Select(int.Parse));
-                foreach (var (key, value) in entries) tree.Add(key, value);
-                return tree;
-            }))();
-            
-            known.Select(kv => kv.Key) // TODO: Use known.Keys instead.
-                 .Shuffle() // Might smoke out lookup-order-sensitive bugs.
-                 .Select(prime => {
-                        var pi = primes[prime];
-                        var correct = pi == known[prime];
-                        
-                        // FIXME: Calling this ORLY makes it sound like it
-                        // states if the "correct" column is correct about
-                        // whether the "pi" column is correct. But it really
-                        // just states if the "pi" column is correct. Either
-                        // the column header should be changed or, better,
-                        // the values displayed in it should be non-boolean.
-                        var ORLY = pi == known2[prime];
-                        
-                        return new { prime, pi, correct, ORLY };
-                     })
+            known.Shuffle() // Might smoke out lookup-order-sensitive bugs.
+                 .Select(kv => (prime: kv.prime,
+                                pi: primes[kv.prime],
+                                knownPi: kv.knownPi))
                  .OrderBy(row => row.prime)
+                 .Zip(wolframResults.Select(int.Parse), (row, knownPi2) => {
+                        var correct = (row.pi == row.knownPi ? "yes" : "No!");
+                        
+                        string ORLY;
+                        if (row.knownPi != knownPi2)
+                            ORLY = "NO WAI!!";
+                        else if (row.pi == row.knownPi)
+                            ORLY = "ya rly";
+                        else
+                            ORLY = "NO RLY";
+                        
+                        return new { row.prime, row.pi, correct, ORLY };
+                   })
                  .Dump("some primes and their ordinals", noTotals: true);
             
             // FIXME: Render HTML explaining that the values in the ORLY column
