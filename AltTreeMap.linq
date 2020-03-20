@@ -691,7 +691,15 @@ namespace Eliah {
                  .Select(prime => {
                         var pi = primes[prime];
                         var correct = pi == known[prime];
+                        
+                        // FIXME: Calling this ORLY make it sound like it
+                        // states if the "correct" column is correct about
+                        // whether the "pi" column is correct. But it really
+                        // just states if the "pi" column is correct. Either
+                        // the column header should be changed or, better,
+                        // the values displayed in it should be non-boolean.
                         var ORLY = pi == known2[prime];
+                        
                         return new { prime, pi, correct, ORLY };
                      })
                  .OrderBy(row => row.prime)
