@@ -597,7 +597,7 @@ namespace Eliah {
             if (!Configuration.EnableBigTests) return;
             
             var primes = await TestDeletionBig();
-            TestRefForEach(primes);
+            await TestRefForEach(primes);
         }
         
         private static void TestDeletionSmall()
@@ -645,7 +645,7 @@ namespace Eliah {
             return primes;
         }
         
-        private static void TestRefForEach(AltTreeMap<long, int?> primes)
+        private static async Task TestRefForEach(AltTreeMap<long, int?> primes)
         {
             var count = 0;
             primes.ForEach((long key, ref int? value) => value = ++count);
@@ -671,15 +671,38 @@ namespace Eliah {
                     { 9_999_973, 664_578 },
             };
             
+            // TODO: When the local test is much more involved than now,
+            // we can do it and await Wolfram|Alpha results at the same time.
+            // TODO: Use known.Keys instead of known.Select(kv => kv.Key).
+            var wolframResults = await known.Select(kv => kv.Key)
+                                            .WolframAlphaSelect("PrimePI");
+            
+            // FIXME: Use enumerable-of-tuples constructor instead of all this.
+            var known2 = ((Func<AltTreeMap<int, int>>)(() => {
+                var tree = new AltTreeMap<int, int>();
+                var entries = known.Select(kv => kv.Key) // TODO: known.Keys
+                                   .Zip(wolframResults.Select(int.Parse));
+                foreach (var (key, value) in entries) tree.Add(key, value);
+                return tree;
+            }))();
+            
             known.Select(kv => kv.Key) // TODO: Use known.Keys instead.
                  .Shuffle() // Might smoke out lookup-order-sensitive bugs.
                  .Select(prime => {
                         var pi = primes[prime];
                         var correct = pi == known[prime];
-                        return new { prime, pi, correct };
+                        var ORLY = pi == known2[prime];
+                        return new { prime, pi, correct, ORLY };
                      })
                  .OrderBy(row => row.prime)
                  .Dump("some primes and their ordinals", noTotals: true);
+            
+            // FIXME: Render HTML explaining that the values in the ORLY column
+            // are from Wolfram|Alpha and giving a hyperlink to the results
+            // page for the query. (If the API gives the URL for this, use
+            // that. Otherwise, build the URL from wolframResults.QueryText.)
+            wolframResults.Dump("Click to expand full Wolfram|Alpha results.",
+                                depth: 0);
         }
         
         private static void
@@ -808,15 +831,15 @@ namespace Eliah {
         /// The function name is not quoted or validated. Arbitrary query code,
         /// in the Wolfram Language or otherwise, could be passed in.
         /// </remarks>
-        internal static Task<WolframAlphaSelectResults>
+        internal static async Task<WolframAlphaSelectResults>
         WolframAlphaSelect<T>(this IEnumerable<T> arguments, string function)
         {
             // FIXME: Extract this File.ReadAllText logic into the Scripts class.
             //        Call the new function from GetTermsHtml() and from here.
             var engine = new WolframAlpha(File.ReadAllText(Scripts.GetPath("AppID")).Trim());
             
-            return Task.Run(() => WolframAlphaSelectResults.Retrieve(
-                                    engine, function, arguments));
+            return await Task.Run(() => WolframAlphaSelectResults.Retrieve(
+                                            engine, function, arguments));
         }
     }
     
