@@ -1,9 +1,14 @@
 <Query Kind="Program">
+  <Reference>D:\configs\.nuget\packages\geocoordinate.netstandard1\1.0.1\lib\netstandard1.1\GeoCoordinate.NetStandard1.dll</Reference>
+  <Reference>D:\configs\.nuget\packages\restsharp\106.6.7\lib\netstandard2.0\RestSharp.dll</Reference>
+  <Reference>D:\configs\.nuget\packages\wolframalphanet\2.0.0\lib\netstandard2.0\WolframAlphaNet.dll</Reference>
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
   <Namespace>System.Security.Cryptography</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
+  <Namespace>WolframAlphaNet</Namespace>
+  <Namespace>WolframAlphaNet.Objects</Namespace>
 </Query>
 
 // AltTreeMap - A tree map implementation and some unit tests.
@@ -787,6 +792,115 @@ namespace Eliah {
                 ?? throw new FileNotFoundException(
                     message: "Can't guess script location - "
                              + "is this an unsaved LINQPad query?");
+    }
+    
+    /// <summary>Functions for querying the Wolfram|Alpha API.</summary>
+    internal static class WolframAlphaQueries {
+        /// <summary>
+        /// Runs a single Wolfram Langage map query via Wolfram|Alpha.
+        /// </summary>
+        /// <param name="arguments">The arguments (preimages) to pass.</param>
+        /// <param name="function">
+        /// The name of the Wolfram Language function to map through.
+        /// </param>
+        /// <returns>Images of argument under the specified function.</returns>
+        /// <remarks>
+        /// The function name is not quoted or validated. Arbitrary query code,
+        /// in the Wolfram Language or otherwise, could be passed in.
+        /// </remarks>
+        internal static Task<WolframAlphaSelectResults>
+        WolframAlphaSelect<T>(this IEnumerable<T> arguments, string function)
+        {
+            // FIXME: Extract this File.ReadAllText logic into the Scripts class.
+            //        Call the new function from GetTermsHtml() and from here.
+            var engine = new WolframAlpha(File.ReadAllText(Scripts.GetPath("AppID")).Trim());
+            
+            return Task.Run(() => WolframAlphaSelectResults.Retrieve(
+                                    engine, function, arguments));
+        }
+    }
+    
+    /// <summary>
+    /// Results of a WolframAlphaQueries.WolframAlphaSelect operation.
+    /// </summary>
+    /// <remarks>
+    /// Enumerating this gives the output of the selection operation.
+    /// It also provides properties to access the raw query text and the full
+    /// result object.
+    /// </remarks>
+    internal sealed class WolframAlphaSelectResults : IEnumerable<string> {
+        internal static WolframAlphaSelectResults Retrieve<T>(
+                WolframAlpha engine, string function, IEnumerable<T> arguments)
+            => new WolframAlphaSelectResults(
+                engine, $"{function}/@{arguments.Brace()}");
+        
+        public IEnumerator<string> GetEnumerator()
+            => OutputSequence.AsEnumerable().GetEnumerator();
+        
+        System.Collections.IEnumerator
+        System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+        
+        internal string QueryText { get; }
+        
+        internal QueryResult FullResult { get; }
+        
+        private static string[] ExtractSequence(QueryResult result)
+            => result.Pods
+                     .Where(pod => pod.ID == "Result")
+                     .First()
+                     .SubPods
+                     .First()
+                     .Plaintext
+                     .Unbrace();
+        
+        private WolframAlphaSelectResults(WolframAlpha engine, string query)
+        {
+            QueryText = query;
+            
+            FullResult = engine.Query(query)
+                    ?? throw new WolframAlphaSelectException(
+                        "Wolfram|Alpha query had no result", null, null);
+            
+            if (!FullResult.Success) {
+                throw new WolframAlphaSelectException(
+                        "Wolfram|Alpha query result indicated failure",
+                        null, FullResult);
+            }
+            
+            try {
+                OutputSequence = ExtractSequence(FullResult);
+            }
+            catch (InvalidOperationException exception) {
+                // FIXME: Actually figure out what exceptions to catch here.
+                throw new WolframAlphaSelectException(
+                        "Can't extract output sequence from Wolfram|Alpha"
+                            + " results",
+                        exception, FullResult);
+            }
+        }
+        
+        private string[] OutputSequence { get; }
+    }
+    
+    [Serializable]
+    internal class WolframAlphaSelectException : InvalidOperationException {
+        internal WolframAlphaSelectException(string message,
+                                             Exception? innerException
+                                             QueryResult? fullResult)
+            : base(message, innerException) => FullResult = fullResult;
+        
+        internal QueryResult? FullResult { get; }
+    }
+    
+    internal static class Bracing {
+        internal static string Brace<T>(this IEnumerable<T> items)
+            => $"{{{string.Join(", ", items)}}}";
+        
+        internal static string[] Unbrace(this string bracedExpression)
+            => unwrap.Match(bracedExpression).Groups[1].ToString().Split(", ");
+        
+        private static readonly Regex unwrap =
+            new Regex(@"{(.+)}", RegexOptions.Compiled);
     }
     
     internal static class ListExtensions {
