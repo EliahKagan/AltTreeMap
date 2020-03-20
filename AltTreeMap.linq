@@ -701,7 +701,8 @@ namespace Eliah {
             // are from Wolfram|Alpha and giving a hyperlink to the results
             // page for the query. (If the API gives the URL for this, use
             // that. Otherwise, build the URL from wolframResults.QueryText.)
-            wolframResults.Dump("Click to expand full Wolfram|Alpha results.",
+            wolframResults.FullResult
+                          .Dump("Click to expand full Wolfram|Alpha results.",
                                 depth: 0);
         }
         
@@ -908,7 +909,7 @@ namespace Eliah {
     [Serializable]
     internal class WolframAlphaSelectException : InvalidOperationException {
         internal WolframAlphaSelectException(string message,
-                                             Exception? innerException
+                                             Exception? innerException,
                                              QueryResult? fullResult)
             : base(message, innerException) => FullResult = fullResult;
         
