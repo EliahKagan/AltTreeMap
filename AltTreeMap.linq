@@ -630,27 +630,29 @@ namespace Eliah {
             // when values, taken in key order, are monotone relative to some
             // comparator), include non-primes here and make test show their
             // pi values as well.
-            var known = new AltTreeMap<int, int> { // (prime, its pi value)...
-                    {        17,       7 },
-                    {        31,      11 },
-                    {      1013,     170 },
-                    {   100_019,    9594 },
-                    { 1_000_033,  78_500 },
-                    { 3_000_029, 216_818 },
-                    { 5_999_993, 412_849 },
-                    { 7_499_981, 508_261 },
-                    { 8_999_971, 602_487 },
-                    { 9_999_973, 664_578 },
+            var known = new (int prime, int knownPi)[] {
+                    (       17,       7),
+                    (       31,      11),
+                    (     1013,     170),
+                    (  100_019,    9594),
+                    (1_000_033,  78_500),
+                    (3_000_029, 216_818),
+                    (5_999_993, 412_849),
+                    (7_499_981, 508_261),
+                    (8_999_971, 602_487),
+                    (9_999_973, 664_578),
             };
             
-            known.Select(kv => kv.Key) // TODO: Use known.Keys instead.
-                 .Shuffle() // Might smoke out lookup-order-sensitive bugs.
-                 .Select(prime => {
-                        var pi = primes[prime];
-                        var correct = pi == known[prime];
-                        return new { prime, pi, correct };
-                     })
+            known.Shuffle() // Might smoke out lookup-order-sensitive bugs.
+                 .Select(kv => (prime: kv.prime,
+                                pi: primes[kv.prime],
+                                knownPi: kv.knownPi))
                  .OrderBy(row => row.prime)
+                 .Select(row => new {
+                        row.prime,
+                        row.pi,
+                        correct = (row.pi == row.knownPi ? "yes" : "NO!")
+                     })
                  .Dump("some primes and their ordinals", noTotals: true);
         }
         
