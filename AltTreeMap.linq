@@ -692,7 +692,7 @@ namespace Eliah {
                         var pi = primes[prime];
                         var correct = pi == known[prime];
                         
-                        // FIXME: Calling this ORLY make it sound like it
+                        // FIXME: Calling this ORLY makes it sound like it
                         // states if the "correct" column is correct about
                         // whether the "pi" column is correct. But it really
                         // just states if the "pi" column is correct. Either
