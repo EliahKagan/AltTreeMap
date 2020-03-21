@@ -849,6 +849,9 @@ namespace Eliah {
         /// <summary>
         /// Runs a single Wolfram Langage map query via Wolfram|Alpha.
         /// </summary>
+        /// <typeparam name="T">
+        /// The type of the arguments(preimages).
+        /// </typeparam>
         /// <param name="arguments">The arguments (preimages) to pass.</param>
         /// <param name="function">
         /// The name of the Wolfram Language function to map through.
@@ -883,6 +886,9 @@ namespace Eliah {
         /// Runs a single Wolfram Language map query via Wolfram|Alpha and
         /// constructs an object that wraps the results.
         /// </summary>
+        /// <typeparam name="T">
+        /// The type of the arguments (preimages).
+        /// </typeparam>
         /// <param name="engine"></param>
         /// <param name="function">
         /// The name of the Wolfram Language function to map through.
@@ -910,10 +916,7 @@ namespace Eliah {
         /// <summary>The query text sent via the Wolfram|Alpha API.</summary>
         internal string QueryText { get; }
         
-        /// <summary>
-        /// Address of the Wolfram|Alpha results page that corresponds to this
-        /// query.
-        /// </summary>
+        /// <summary>Corresponding Wolfram|Alpha result page URL.</summary>
         internal string QueryUrl
             => QueryUrlPrefix + WebUtility.UrlEncode(QueryText);
         
@@ -961,20 +964,57 @@ namespace Eliah {
         private string[] OutputSequence { get; }
     }
     
+    /// <summary>
+    /// Exception thrown when <see cref="WolframAlphaSelect"/> fails.
+    /// </summary>
+    /// <remarks>
+    /// When the query got far enough to return a QueryResult, this exception
+    /// makes it available in the <c>FullResult</c> property.
+    /// </remarks>
     [Serializable]
     internal class WolframAlphaSelectException : InvalidOperationException {
+        /// <param name="message">The error message to show.</param>
+        /// <param name="innerException">
+        /// The original exception, if any, that caused this exception.
+        /// </param>
+        /// <param name="fullResult">
+        /// The result, if any, returned by the query.
+        /// </param>
         internal WolframAlphaSelectException(string message,
                                              Exception? innerException,
                                              QueryResult? fullResult)
             : base(message, innerException) => FullResult = fullResult;
         
+        /// <summary>The query result obtained, if any.</summary>
         internal QueryResult? FullResult { get; }
     }
     
+    /// <summary>
+    /// Extension methods for converting data to and from braced-list text.
+    /// </summary>
     internal static class Bracing {
+        /// <summary>
+        /// Converts a sequence of items of any type to braced-list text.
+        /// </summary>
+        /// <typeparam name="T">The type of the input sequence</typeparam>
+        /// <param name="items">The input sequence.</param>
+        /// <returns>The braced-list text representation.</returns>
+        /// <remarks>
+        /// Typically useful only if <c>T</c> overrides <c>ToString</c>.
+        /// </remarks>
         internal static string Brace<T>(this IEnumerable<T> items)
             => $"{{{string.Join(", ", items)}}}";
         
+        /// <summary>
+        /// Converts braced-list text to a sequence of strings.
+        /// </summary>
+        /// <param name="bracedExpression">Braced-list text.</param>
+        /// <returns>An output sequence of tokens.</returns>
+        /// <remarks>
+        /// Doesn't try to discern the target type. Call <c>Select</c> on the
+        /// result to convert it appropriately. For example:
+        /// <code>bracedExpression.Unbrace().Select(int.Parse)</code>
+        /// </remarks>
         internal static string[] Unbrace(this string bracedExpression)
             => unwrap.Match(bracedExpression).Groups[1].ToString().Split(", ");
         
