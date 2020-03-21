@@ -14,6 +14,7 @@
 
 namespace Eliah {
     internal static class Configuration {
+        // Long-running tests. Verbose debugging is too verbose for these.
         internal static bool EnableBigTests => true;
     }
 
