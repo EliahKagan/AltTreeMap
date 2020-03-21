@@ -4,6 +4,7 @@
   <Reference>D:\configs\.nuget\packages\wolframalphanet\2.0.0\lib\netstandard2.0\WolframAlphaNet.dll</Reference>
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
+  <Namespace>System.Net</Namespace>
   <Namespace>System.Runtime.CompilerServices</Namespace>
   <Namespace>System.Security.Cryptography</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
@@ -717,13 +718,16 @@ namespace Eliah {
                    })
                  .Dump("some primes and their ordinals", noTotals: true);
             
-            // FIXME: Render HTML explaining that the values in the ORLY column
-            // are from Wolfram|Alpha and giving a hyperlink to the results
-            // page for the query. (If the API gives the URL for this, use
-            // that. Otherwise, build the URL from wolframResults.QueryText.)
             wolframResults.FullResult
                           .Dump("Click to expand full Wolfram|Alpha results.",
                                 depth: 0);
+            
+            Util.RawHtml("<p>The ORLY column is created based on comparing "
+                         + $@"<a href=""{wolframResults.QueryUrl}"">values of "
+                         + "the prime-counting function sourced from " 
+                         + "Wolfram|Alpha that can also be viewed on the web "
+                         + "here</a>, with local results.</p>")
+                .Dump("See also the Wolfram|Alpha website.");
         }
         
         private static void
@@ -904,8 +908,18 @@ namespace Eliah {
         /// <summary>The query text sent via the Wolfram|Alpha API.</summary>
         internal string QueryText { get; }
         
+        /// <summary>
+        /// Address of the Wolfram|Alpha results page that corresponds to this
+        /// query.
+        /// </summary>
+        internal string QueryUrl
+            => QueryUrlPrefix + WebUtility.UrlEncode(QueryText);
+        
         /// <summary>All information returned by Wolfram|Alpha.</summary>
         internal QueryResult FullResult { get; }
+        
+        private const string QueryUrlPrefix =
+            "https://www.wolframalpha.com/input/?i=";
         
         private static string[] ExtractSequence(QueryResult result)
             => result.Pods
