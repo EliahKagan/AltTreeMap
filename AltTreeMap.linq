@@ -49,7 +49,9 @@ namespace Eliah {
         /// <remarks>Verbose debugging is too verbose for these tests.</remarks>
         internal static bool EnableBigTests => true;
         
-        // Use Wolfram|Alpha to double-check results in TestRefForEach.
+        /// <summary>
+        /// Use Wolfram|Alpha to double-check results in TestRefForEach.
+        /// </summary>
         internal static bool EnableWolframAlpha => true;
         
         /// <summary>
