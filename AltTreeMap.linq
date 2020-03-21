@@ -678,6 +678,9 @@ namespace Eliah {
             };
             
             if (Configuration.InjectWrongDataInTestRefForEach) {
+                "Injecting wrong data, for testing."
+                    .Dump($"In {nameof(TestRefForEach)}");
+            
                 // True positive (wrong tree value).
                 --primes[known[4].prime];
                 
