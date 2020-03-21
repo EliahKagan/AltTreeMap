@@ -16,6 +16,9 @@ namespace Eliah {
     internal static class Configuration {
         // Long-running tests. Verbose debugging is too verbose for these.
         internal static bool EnableBigTests => true;
+        
+        // Make some stuff wrong in TestRefForEach, to test the tests.
+        internal static bool InjectWrongDataInTestRefForEach => true;
     }
 
     public sealed class AltTreeMap<TKey, TValue>
@@ -643,6 +646,18 @@ namespace Eliah {
                     (8_999_971, 602_487),
                     (9_999_973, 664_578),
             };
+            
+            if (Configuration.InjectWrongDataInTestRefForEach) {
+                // True positive (wrong tree value).
+                --primes[known[4].prime];
+                
+                // False positive (wrong known value).
+                --known[7].knownPi;
+                
+                // False negative (wrong tree value and wrong known value).
+                --primes[known[9].prime];
+                --known[9].knownPi;
+            }
             
             known.Shuffle() // Might smoke out lookup-order-sensitive bugs.
                  .Select(kv => (prime: kv.prime,
