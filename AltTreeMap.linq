@@ -873,19 +873,38 @@ namespace Eliah {
     /// result object.
     /// </remarks>
     internal sealed class WolframAlphaSelectResults : IEnumerable<string> {
+        /// <summary>
+        /// Runs a single Wolfram Language map query via Wolfram|Alpha and
+        /// constructs an object that wraps the results.
+        /// </summary>
+        /// <param name="engine"></param>
+        /// <param name="function">
+        /// The name of the Wolfram Language function to map through.
+        /// </param>
+        /// <param name="arguments">The arguments (preimages) to pass.</param>
+        /// <remarks>
+        /// Aside from it use as a helper function for the extension method
+        /// WolframAlphaQueries.WolframAlphaSelect, this should only be called
+        /// directly if synchronous operation--with a non-async caller--is
+        /// needed.
+        /// </remarks>
         internal static WolframAlphaSelectResults Retrieve<T>(
                 WolframAlpha engine, string function, IEnumerable<T> arguments)
             => new WolframAlphaSelectResults(
                 engine, $"{function}/@{arguments.Brace()}");
         
+        /// <summary>Enumerates outputs of the selection operation.</summary>
+        /// <returns>An enumerator that walks through each output.</returns>
         public IEnumerator<string> GetEnumerator()
             => OutputSequence.AsEnumerable().GetEnumerator();
         
         System.Collections.IEnumerator
         System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
         
+        /// <summary>The query text sent via the Wolfram|Alpha API.</summary>
         internal string QueryText { get; }
         
+        /// <summary>All information returned by Wolfram|Alpha.</summary>
         internal QueryResult FullResult { get; }
         
         private static string[] ExtractSequence(QueryResult result)
