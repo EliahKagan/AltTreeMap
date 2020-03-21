@@ -13,14 +13,29 @@
 //#define DEBUG_TOPOLOGY
 
 namespace Eliah {
+    /// <summary>Knobs for some debugging and testing related behavior</summary>
+    /// <remarks>
+    /// This class collects properties that are fixed at compile-time by editing
+    /// the code contained here. The reasons these are given as properties and
+    /// not <c>#define</c> are so the compiler can always check more code paths,
+    /// and because <c>#define</c>s are cumbersome in some situations (e.g., an
+    /// <c>async</c> method can't have a <c>Conditional</c> attribute, so
+    /// <c>#if</c> would hae to be used). The reason these are properties rather
+    /// than <c>const</c>s is to avoid warnings about unreachable code.
+    /// </remarks>
     internal static class Configuration {
-        // Long-running tests. Verbose debugging is too verbose for these.
+        /// <summary>Turns on long-running tests.</summary>
+        /// <remarks>Verbose debugging is too verbose for these tests.</remarks>
         internal static bool EnableBigTests => true;
         
-        // Make some stuff wrong in TestRefForEach, to test the tests.
+        /// <summary>
+        /// Make some stuff wrong in <c>TestRefForEach</c>, to test the tests.
+        /// </summary>
         internal static bool InjectWrongDataInTestRefForEach => false;
     }
 
+    /// <summary>BST implementation of an ordered associative array.</summary>
+    /// <remarks>This version is not self-balancing.</remarks>
     public sealed class AltTreeMap<TKey, TValue>
             : IEnumerable<KeyValuePair<TKey, TValue>> {
         public delegate void ValueMutator(TKey key, ref TValue value);
