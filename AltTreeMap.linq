@@ -39,6 +39,9 @@ namespace Eliah {
         
         // Use Wolfram|Alpha to double-check results in TestRefForEach.
         internal static bool EnableWolframAlpha => true;
+        
+        // Make some stuff wrong in TestRefForEach, to test the tests.
+        internal static bool InjectWrongDataInTestRefForEach => true;
     }
 
     public sealed class AltTreeMap<TKey, TValue>
@@ -673,6 +676,18 @@ namespace Eliah {
                     (8_999_971, 602_487),
                     (9_999_973, 664_578),
             };
+            
+            if (Configuration.InjectWrongDataInTestRefForEach) {
+                // True positive (wrong tree value).
+                --primes[known[4].prime];
+                
+                // False positive (wrong known value).
+                --known[7].knownPi;
+                
+                // False negative (wrong tree value and wrong known value).
+                --primes[known[9].prime];
+                --known[9].knownPi;
+            }
             
             // TODO: When the local test is much more involved than now,
             // we can do it and await Wolfram|Alpha results at the same time.
