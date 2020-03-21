@@ -723,10 +723,12 @@ namespace Eliah {
                                 depth: 0);
             
             Util.RawHtml("<p>The ORLY column is created based on comparing "
-                         + $@"<a href=""{wolframResults.QueryUrl}"">values of "
-                         + "the prime-counting function sourced from " 
-                         + "Wolfram|Alpha that can also be viewed on the web "
-                         + "here</a>, with local results.</p>")
+                         + "values of the prime-counting (pi) function "
+                         + "computed locally with those sourced from "
+                         + "Wolfram|Alpha, via the Wolfram|Alpha API. "
+                         + $@"<a href=""{wolframResults.QueryUrl}"">Those "
+                         + "values can also be seen on the Wolfram|Alpha "
+                         + "website.</a></p>")
                 .Dump("See also the Wolfram|Alpha website.");
         }
         
