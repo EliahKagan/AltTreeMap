@@ -18,7 +18,7 @@ namespace Eliah {
         internal static bool EnableBigTests => true;
         
         // Make some stuff wrong in TestRefForEach, to test the tests.
-        internal static bool InjectWrongDataInTestRefForEach => false;
+        internal static bool InjectWrongDataInTestRefForEach => true;
     }
 
     public sealed class AltTreeMap<TKey, TValue>
