@@ -8,26 +8,44 @@
 
 // AltTreeMap - A tree map implementation and some unit tests.
 
-//#define VERBOSE_DEBUGGING
-//#define DEBUG_REPRESENTATION_INVARIANTS
-//#define DEBUG_TOPOLOGY
+// When defined, compile a function MaybeCheckRI and calls to it. This must
+// still then be turned on at runtime, and it can be turned on and off at any
+// point during  the program's execution.
+#define DEBUG_REPRESENTATION_INVARIANTS
+
+// When defined, compile a function MaybeDumpNodes and calls to it from some
+// places in the code. Unlike MaybeCheckRI, this is not a comprehensive check
+// It is instead a way to visualize the structure of the tree in LINQPad. This
+// must still then be turned on at runtime, and it can be turned on and off at
+// any point during the program's execution.
+#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     /// <summary>
     /// Knobs for some debugging- and testing-related behavior.
     /// </summary>
     /// <remarks>
-    /// This class collects properties that are fixed at compile-time by editing
-    /// the code contained here. The reasons these are given as properties and
-    /// not <c>#define</c> are so the compiler can always check more code paths,
-    /// and because <c>#define</c>s are cumbersome in some situations (e.g., an
-    /// <c>async</c> method can't have a <c>Conditional</c> attribute, so
-    /// <c>#if</c> would hae to be used). The reason these are properties rather
-    /// than <c>const</c>s is to avoid warnings about unreachable code.
+    /// This class collects properties that are fixed at compile-time by
+    /// editing the code contained here. The reasons these are given as
+    /// properties and not <c>#define</c> are so the compiler can always check
+    /// more code paths, and because <c>#define</c>s are cumbersome in some
+    /// situations (e.g., an <c>async</c> method can't have a
+    /// <c>Conditional</c> attribute, so <c>#if</c> would hae to be used). The
+    /// reason these are properties rather than <c>const</c>s is to avoid
+    /// warnings about unreachable code.
     /// </remarks>
     internal static class Configuration {
+        /// <summary>
+        /// Don't limit debug messages to errors and warnings.
+        /// </summary>
+        internal static bool VerboseDebugging => true;
+        
         /// <summary>Turns on long-running tests.</summary>
-        /// <remarks>Verbose debugging is too verbose for these tests.</remarks>
+        /// <remarks>
+        /// Verbose debugging is too verbose for these tests. Also, these tests
+        /// will take a very long time when representation-invariant debugging 
+        /// is turned on.
+        /// </remarks>
         internal static bool EnableBigTests => true;
         
         /// <summary>
@@ -406,6 +424,8 @@ namespace Eliah {
         [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
         private void MaybeCheckRI(string reason)
         {
+            if (!Log.Enabled) return;
+            
             var count = 0;
             
             bool Check(Node node)
@@ -462,7 +482,10 @@ namespace Eliah {
         
         [Conditional("DEBUG_TOPOLOGY")]
         private void MaybeDumpNodes()
-            => _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
+        {
+            if (Log.Enabled) // Only dump nodes if we're currently logging.
+                _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
+        }
         
         private string PseudoAddress => $"0x{GetHashCode():X}";
         
@@ -474,21 +497,29 @@ namespace Eliah {
     /// <summary>Simple logger for printing debug information.</summary>
     /// <remarks>TODO: Use a real logging library instead.</remarks>
     internal static class Log {
-        internal static void Warn(string message) => Print(message);
+        internal static void Warn(string message)
+            => WriteMessage?.Invoke(message);
         
-        [Conditional("VERBOSE_DEBUGGING")]
-        internal static void Note(string message) => Print(message);
+        internal static void Note(string message)
+        {
+            if (Configuration.VerboseDebugging) WriteMessage?.Invoke(message);
+        }
         
-        /// <summary>Logs the message in some default manner.</summary>
-        private static void Print(string message)
-            => Console.WriteLine(message);
+        /// <summary>Subscribers to this event receive log messages.</summary>
+        internal static event Action<string>? WriteMessage = null;
+        
+        /// <summary>Tells if there are any subscribers.</summary>
+        internal static bool Enabled => WriteMessage != null;
     }
     
     internal static class UnitTest {
         private static async Task Main()
         {
+            Log.WriteMessage += Console.WriteLine;
             RunGeneralTests();
             TestDeletionSmall();
+            
+            Log.WriteMessage -= Console.WriteLine;
             await MaybeRunBigTests();
         }
     
