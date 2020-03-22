@@ -40,7 +40,7 @@ namespace Eliah {
         /// Setting this to <c>false</c> currenrly turns off all debug checks
         /// and debugging output.
         /// </remarks>
-        internal static bool EnableDebugging => true;
+        internal static bool EnableDebugging => false;
     
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
