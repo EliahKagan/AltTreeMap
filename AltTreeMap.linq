@@ -507,32 +507,39 @@ namespace Eliah {
     /// <summary>Simple logger for printing debug information.</summary>
     /// <remarks>TODO: Use a real logging library instead.</remarks>
     internal static class Log {
+        /// <summary>Prints a warning message, indicating a problem.</summary>
+        /// <remarks>
+        /// Warnings are emitted whenever logging is enabled.
+        /// </remarks>
         internal static void Warn(string message)
-            => WriteMessage?.Invoke(message);
-        
-        internal static void Note(string message)
         {
-            if (Configuration.EnableVerboseDebugging)
-                WriteMessage?.Invoke(message);
+            if (Enabled) Console.WriteLine(message);
         }
         
-        /// <summary>Subscribers to this event receive log messages.</summary>
-        internal static event Action<string>? WriteMessage = null;
+        /// <summary>Prints a notice, not indicating a problem.</summary>
+        /// <remarks>Notices are emitted only with verbose debugging.</remarks>
+        internal static void Note(string message)
+        {
+            if (Configuration.EnableVerboseDebugging && Enabled)
+                Console.WriteLine(message);
+        }
         
-        /// <summary>Tells if there are any subscribers.</summary>
-        internal static bool Enabled => WriteMessage != null;
+        /// <summary>
+        /// Messages are only printed when this is set to <c>true</c>.
+        /// </summary>
+        /// <remakrs>Not thread-safe without memory barriers.</remarks>
+        internal static bool Enabled { get; set; } = false;
     }
     
     internal static class UnitTest {
         private static async Task Main()
         {
-            if (Configuration.EnableDebugging)
-                Log.WriteMessage += Console.WriteLine;
+            if (Configuration.EnableDebugging) Log.Enabled = true;
             
             RunGeneralTests();
             TestDeletionSmall();
             
-            Log.WriteMessage -= Console.WriteLine; // OK even if not added.
+            Log.Enabled = false;
             await MaybeRunBigTests();
         }
     
