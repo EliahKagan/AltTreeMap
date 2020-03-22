@@ -10,7 +10,7 @@
 
 // When defined, compile a function MaybeCheckRI and calls to it. This must
 // still then be turned on at runtime, and it can be turned on and off at any
-// point during  the program's execution.
+// point during the program's execution.
 #define DEBUG_REPRESENTATION_INVARIANTS
 
 // When defined, compile a function MaybeDumpNodes and calls to it from some
