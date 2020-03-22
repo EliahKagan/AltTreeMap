@@ -1,7 +1,7 @@
 <Query Kind="Program">
-  <Reference>D:\configs\.nuget\packages\geocoordinate.netstandard1\1.0.1\lib\netstandard1.1\GeoCoordinate.NetStandard1.dll</Reference>
-  <Reference>D:\configs\.nuget\packages\restsharp\106.6.7\lib\netstandard2.0\RestSharp.dll</Reference>
-  <Reference>D:\configs\.nuget\packages\wolframalphanet\2.0.0\lib\netstandard2.0\WolframAlphaNet.dll</Reference>
+  <Reference>&lt;NuGet&gt;\geocoordinate.netstandard1\1.0.1\lib\netstandard1.1\GeoCoordinate.NetStandard1.dll</Reference>
+  <Reference>&lt;NuGet&gt;\restsharp\106.6.7\lib\netstandard2.0\RestSharp.dll</Reference>
+  <Reference>&lt;NuGet&gt;\wolframalphanet\2.0.0\lib\netstandard2.0\WolframAlphaNet.dll</Reference>
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Net</Namespace>
