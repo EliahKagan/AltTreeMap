@@ -37,7 +37,7 @@ namespace Eliah {
     internal static class Configuration {
         /// <summary>Print debug messages some of the time.</summary>
         /// <remarks>
-        /// Setting this to <c>false</c> currenrly turns off all debug checks
+        /// Setting this to <c>false</c> currently turns off all debug checks
         /// and debugging output.
         /// </remarks>
         internal static bool EnableDebugging => true;
