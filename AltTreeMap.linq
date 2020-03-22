@@ -493,7 +493,8 @@ namespace Eliah {
         [Conditional("DEBUG_TOPOLOGY")]
         private void MaybeDumpNodes()
         {
-            if (Log.Enabled) // Only dump nodes if we're currently logging.
+            // Only dump nodes if debugging verbosely and currently logging.
+            if (Configuration.EnableVerboseDebugging && Log.Enabled)
                 _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
         }
         
