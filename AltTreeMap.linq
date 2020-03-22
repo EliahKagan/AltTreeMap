@@ -40,7 +40,7 @@ namespace Eliah {
         /// Setting this to <c>false</c> currenrly turns off all debug checks
         /// and debugging output.
         /// </remarks>
-        internal static bool EnableDebugging => false;
+        internal static bool EnableDebugging => true;
     
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
@@ -53,7 +53,7 @@ namespace Eliah {
         /// <summary>Turns on long-running tests.</summary>
         /// <remarks>
         /// Verbose debugging is too verbose for these tests. Also, these tests
-        /// will take a very long time when representation-invariant debugging 
+        /// will take a very long time when representation-invariant debugging
         /// is turned on.
         /// </remarks>
         internal static bool EnableBigTests => true;
@@ -532,7 +532,7 @@ namespace Eliah {
             RunGeneralTests();
             TestDeletionSmall();
             
-            Log.WriteMessage -= Console.WriteLine; // OK even if not added.
+            //Log.WriteMessage -= Console.WriteLine; // OK even if not added.
             await MaybeRunBigTests();
         }
     
