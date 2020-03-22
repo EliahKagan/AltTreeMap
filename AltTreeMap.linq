@@ -48,7 +48,7 @@ namespace Eliah {
         /// <remarks>
         /// <see cref="EnableDebugging"/> must still be <c>true</c>.
         /// </remarks>
-        internal static bool EnableVerboseDebugging => true;
+        internal static bool EnableVerboseDebugging => false;
         
         /// <summary>Turns on long-running tests.</summary>
         /// <remarks>
