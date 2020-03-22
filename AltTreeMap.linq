@@ -40,7 +40,7 @@ namespace Eliah {
         /// Setting this to <c>false</c> currently turns off all debug checks
         /// and debugging output.
         /// </remarks>
-        internal static bool EnableDebugging => true;
+        internal static bool EnableDebugging => false;
     
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
@@ -532,7 +532,7 @@ namespace Eliah {
             RunGeneralTests();
             TestDeletionSmall();
             
-            //Log.WriteMessage -= Console.WriteLine; // OK even if not added.
+            Log.WriteMessage -= Console.WriteLine; // OK even if not added.
             await MaybeRunBigTests();
         }
     
