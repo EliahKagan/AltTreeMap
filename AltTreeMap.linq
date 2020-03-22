@@ -29,10 +29,9 @@ namespace Eliah {
     /// editing the code contained here. The reasons these are given as
     /// properties and not <c>#define</c> are so the compiler can always check
     /// more code paths, and because <c>#define</c>s are cumbersome in some
-    /// situations (e.g., an <c>async</c> method can't have a
-    /// <c>Conditional</c> attribute, so <c>#if</c> would hae to be used). The
-    /// reason these are properties rather than <c>const</c>s is to avoid
-    /// warnings about unreachable code.
+    /// situations (e.g., <c>async</c> method can't have <c>Conditional</c>
+    /// attributes, so <c>#if</c> would have to be used). They are properties
+    /// rather than <c>const</c>s to avoid warnings about unreachable code.
     /// </remarks>
     internal static class Configuration {
         /// <summary>Print debug messages some of the time.</summary>
