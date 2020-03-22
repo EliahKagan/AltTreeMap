@@ -18,7 +18,7 @@
 // It is instead a way to visualize the structure of the tree in LINQPad. This
 // must still then be turned on at runtime, and it can be turned on and off at
 // any point during the program's execution.
-#define DEBUG_TOPOLOGY
+//#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     /// <summary>
@@ -74,7 +74,7 @@ namespace Eliah {
         public AltTreeMap(IComparer<TKey> comparer)
         {
             Comparer = comparer;
-            MaybeCheckRI("created empty tree");
+            if (Log.Enabled) MaybeCheckRI("created empty tree");
         }
         
         public AltTreeMap(AltTreeMap<TKey, TValue> other)
@@ -96,7 +96,8 @@ namespace Eliah {
             if (other._root != null) {
                 Copy(other._root, out _root, null);
                 Count = other.Count;
-                MaybeCheckRI("populated initial nodes from existing tree");
+                if (Log.Enabled)
+                    MaybeCheckRI("populated initial nodes from existing tree");
             }
         }
         
@@ -150,12 +151,12 @@ namespace Eliah {
         
         public void Clear()
         {
-            MaybeDumpNodes();
+            if (Log.Enabled) MaybeDumpNodes();
         
             _root = null;
             Count = 0;
             InvalidateEnumerators();
-            MaybeCheckRI("cleared all nodes");
+            if (Log.Enabled) MaybeCheckRI("cleared all nodes");
         }
         
         public bool ContainsKey(TKey key)
@@ -207,7 +208,7 @@ namespace Eliah {
             child = Drop(child);
             --Count;
             InvalidateEnumerators();
-            MaybeCheckRI($"removed node with key: {key}");
+            if (Log.Enabled) MaybeCheckRI($"removed node with key: {key}");
             return true;
         }
         
@@ -371,7 +372,7 @@ namespace Eliah {
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
-            MaybeCheckRI($"emplaced ({key}, {value})");
+            if (Log.Enabled) MaybeCheckRI($"emplaced ({key}, {value})");
         }
         
         private Node FirstNode()
