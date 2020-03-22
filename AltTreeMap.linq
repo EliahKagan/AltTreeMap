@@ -35,10 +35,20 @@ namespace Eliah {
     /// warnings about unreachable code.
     /// </remarks>
     internal static class Configuration {
+        /// <summary>Print debug messages some of the time.</summary>
+        /// <remarks>
+        /// Setting this to <c>false</c> currenrly turns off all debug checks
+        /// and debugging output.
+        /// </remarks>
+        internal static bool EnableDebugging => true;
+    
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
         /// </summary>
-        internal static bool VerboseDebugging => true;
+        /// <remarks>
+        /// <see cref="EnableDebugging"/> must still be <c>true</c>.
+        /// </remarks>
+        internal static bool EnableVerboseDebugging => true;
         
         /// <summary>Turns on long-running tests.</summary>
         /// <remarks>
@@ -502,7 +512,8 @@ namespace Eliah {
         
         internal static void Note(string message)
         {
-            if (Configuration.VerboseDebugging) WriteMessage?.Invoke(message);
+            if (Configuration.EnableVerboseDebugging)
+                WriteMessage?.Invoke(message);
         }
         
         /// <summary>Subscribers to this event receive log messages.</summary>
@@ -515,11 +526,13 @@ namespace Eliah {
     internal static class UnitTest {
         private static async Task Main()
         {
-            Log.WriteMessage += Console.WriteLine;
+            if (Configuration.EnableDebugging)
+                Log.WriteMessage += Console.WriteLine;
+            
             RunGeneralTests();
             TestDeletionSmall();
             
-            Log.WriteMessage -= Console.WriteLine;
+            Log.WriteMessage -= Console.WriteLine; // OK even if not added.
             await MaybeRunBigTests();
         }
     
