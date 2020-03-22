@@ -13,7 +13,9 @@
 //#define DEBUG_TOPOLOGY
 
 namespace Eliah {
-    /// <summary>Knobs for some debugging and testing related behavior</summary>
+    /// <summary>
+    /// Knobs for some debugging- and testing-related behavior.
+    /// </summary>
     /// <remarks>
     /// This class collects properties that are fixed at compile-time by editing
     /// the code contained here. The reasons these are given as properties and
