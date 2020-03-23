@@ -18,7 +18,7 @@
 // It is instead a way to visualize the structure of the tree in LINQPad. This
 // must still then be turned on at runtime, and it can be turned on and off at
 // any point during the program's execution.
-//#define DEBUG_TOPOLOGY
+#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     /// <summary>
@@ -39,7 +39,7 @@ namespace Eliah {
         /// Setting this to <c>false</c> currently turns off all debug checks
         /// and debugging output.
         /// </remarks>
-        internal static bool EnableDebugging => false;
+        internal static bool EnableDebugging => true;
     
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
@@ -74,7 +74,9 @@ namespace Eliah {
         public AltTreeMap(IComparer<TKey> comparer)
         {
             Comparer = comparer;
-            if (Log.Enabled) MaybeCheckRI("created empty tree");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke("created empty tree");
+#endif
         }
         
         public AltTreeMap(AltTreeMap<TKey, TValue> other)
@@ -96,8 +98,9 @@ namespace Eliah {
             if (other._root != null) {
                 Copy(other._root, out _root, null);
                 Count = other.Count;
-                if (Log.Enabled)
-                    MaybeCheckRI("populated initial nodes from existing tree");
+#if DEBUG_REPRESENTATION_INVARIANTS
+                CheckRI?.Invoke("populated initial nodes from existing tree");
+#endif
             }
         }
         
@@ -151,12 +154,15 @@ namespace Eliah {
         
         public void Clear()
         {
-            if (Log.Enabled) MaybeDumpNodes();
-        
+#if DEBUG_TOPOLOGY
+            DumpNodes?.Invoke();
+#endif
             _root = null;
             Count = 0;
             InvalidateEnumerators();
-            if (Log.Enabled) MaybeCheckRI("cleared all nodes");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke("cleared all nodes");
+#endif
         }
         
         public bool ContainsKey(TKey key)
@@ -208,7 +214,9 @@ namespace Eliah {
             child = Drop(child);
             --Count;
             InvalidateEnumerators();
-            if (Log.Enabled) MaybeCheckRI($"removed node with key: {key}");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke($"removed node with key: {key}");
+#endif
             return true;
         }
         
@@ -372,7 +380,9 @@ namespace Eliah {
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
-            if (Log.Enabled) MaybeCheckRI($"emplaced ({key}, {value})");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke($"emplaced ({key}, {value})");
+#endif
         }
         
         private Node FirstNode()
@@ -431,11 +441,11 @@ namespace Eliah {
             }
         }
         
-        [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
-        private void MaybeCheckRI(string reason)
+        private Action<string>? CheckRI
+            => Log.LoggingRequested ? DoCheckRI : default(Action<string>?);
+        
+        private void DoCheckRI(string reason)
         {
-            if (!Log.Enabled) return;
-            
             var count = 0;
             
             bool Check(Node node)
@@ -490,11 +500,13 @@ namespace Eliah {
                 Log.Note("Representation invariants seem OK.");
         }
         
-        [Conditional("DEBUG_TOPOLOGY")]
-        private void MaybeDumpNodes()
+        private Action? DumpNodes
+            => Log.LoggingRequested ? DoDumpNodes : default(Action?);
+        
+        private void DoDumpNodes()
         {
-            // Only dump nodes if debugging verbosely and currently logging.
-            if (Configuration.EnableVerboseDebugging && Log.Enabled)
+            // Only dump nodes if debugging verbosely.
+            if (Configuration.EnableVerboseDebugging)
                 _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
         }
         
@@ -509,38 +521,34 @@ namespace Eliah {
     /// <remarks>TODO: Use a real logging library instead.</remarks>
     internal static class Log {
         /// <summary>Prints a warning message, indicating a problem.</summary>
-        /// <remarks>
-        /// Warnings are emitted whenever logging is enabled.
-        /// </remarks>
         internal static void Warn(string message)
-        {
-            if (Enabled) Console.WriteLine(message);
-        }
+            => Console.WriteLine(message);
         
         /// <summary>Prints a notice, not indicating a problem.</summary>
         /// <remarks>Notices are emitted only with verbose debugging.</remarks>
         internal static void Note(string message)
         {
-            if (Configuration.EnableVerboseDebugging && Enabled)
+            if (Configuration.EnableVerboseDebugging)
                 Console.WriteLine(message);
         }
         
         /// <summary>
-        /// Messages are only printed when this is set to <c>true</c>.
+        /// For use by code outside this class to determine if logging should
+        /// be done. Currently, no methods in this class check this property.
         /// </summary>
-        /// <remakrs>Not thread-safe without memory barriers.</remarks>
-        internal static bool Enabled { get; set; } = false;
+        /// <remarks>Not thread-safe without memory barriers.</remarks>
+        internal static bool LoggingRequested { get; set; } = false;
     }
     
     internal static class UnitTest {
         private static async Task Main()
         {
-            if (Configuration.EnableDebugging) Log.Enabled = true;
+            if (Configuration.EnableDebugging) Log.LoggingRequested = true;
             
             RunGeneralTests();
             TestDeletionSmall();
             
-            Log.Enabled = false;
+            Log.LoggingRequested = false;
             await MaybeRunBigTests();
         }
     
