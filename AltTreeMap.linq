@@ -29,26 +29,54 @@
 // See also the Wolfram|Alpha API Terms of Use:
 // https://products.wolframalpha.com/api/termsofuse.html
 
-//#define VERBOSE_DEBUGGING
-//#define DEBUG_REPRESENTATION_INVARIANTS
-//#define DEBUG_TOPOLOGY
+// When defined, compile calls to the CheckRI delegate, which will still be
+// null at runtime unless Log.LoggingRequested is set to true. Undefining this
+// conditional symbol may yield a small (but probably measurable) speedup.
+#define DEBUG_REPRESENTATION_INVARIANTS
+
+// When defined, compile calls to the DumpNodes delegate, which will still be
+// null at runtime unless Log.LoggingRquested is set to true, and which, even
+// when non-null, will only do anything if Configuration.VerboseDebugging
+// evaluates to true. Undefining this conditional symbol might yield a small
+// speedup, but it would most likely be negligible, as DumpNodes calls don't
+// occur in hot code.
+#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     /// <summary>
     /// Knobs for some debugging- and testing-related behavior.
     /// </summary>
     /// <remarks>
-    /// This class collects properties that are fixed at compile-time by editing
-    /// the code contained here. The reasons these are given as properties and
-    /// not <c>#define</c> are so the compiler can always check more code paths,
-    /// and because <c>#define</c>s are cumbersome in some situations (e.g., an
-    /// <c>async</c> method can't have a <c>Conditional</c> attribute, so
-    /// <c>#if</c> would hae to be used). The reason these are properties rather
-    /// than <c>const</c>s is to avoid warnings about unreachable code.
+    /// This class collects properties that are fixed at compile time by
+    /// editing the code contained here. The reasons these are given as
+    /// properties and not <c>#define</c> are so the compiler can always check
+    /// more code paths, and because <c>#define</c>s are cumbersome in some
+    /// situations (e.g., <c>async</c> methods can't have <c>Conditional</c>
+    /// attributes, so <c>#if</c> would have to be used). They are properties
+    /// rather than <c>const</c>s to avoid warnings about unreachable code.
     /// </remarks>
     internal static class Configuration {
+        /// <summary>Print debug messages some of the time.</summary>
+        /// <remarks>
+        /// Setting this to <c>false</c> currently turns off all debug checks
+        /// and debugging output.
+        /// </remarks>
+        internal static bool EnableDebugging => false;
+    
+        /// <summary>
+        /// Don't limit debug messages to errors and warnings.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EnableDebugging"/> must still be <c>true</c>.
+        /// </remarks>
+        internal static bool EnableVerboseDebugging => false;
+        
         /// <summary>Turns on long-running tests.</summary>
-        /// <remarks>Verbose debugging is too verbose for these tests.</remarks>
+        /// <remarks>
+        /// Verbose debugging is too verbose for these tests. Also, these tests
+        /// will take a very long time when representation-invariant debugging
+        /// is turned on.
+        /// </remarks>
         internal static bool EnableBigTests => true;
         
         /// <summary>
@@ -73,7 +101,9 @@ namespace Eliah {
         public AltTreeMap(IComparer<TKey> comparer)
         {
             Comparer = comparer;
-            MaybeCheckRI("created empty tree");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke("created empty tree");
+#endif
         }
         
         public AltTreeMap(AltTreeMap<TKey, TValue> other)
@@ -95,7 +125,9 @@ namespace Eliah {
             if (other._root != null) {
                 Copy(other._root, out _root, null);
                 Count = other.Count;
-                MaybeCheckRI("populated initial nodes from existing tree");
+#if DEBUG_REPRESENTATION_INVARIANTS
+                CheckRI?.Invoke("populated initial nodes from existing tree");
+#endif
             }
         }
         
@@ -149,12 +181,15 @@ namespace Eliah {
         
         public void Clear()
         {
-            MaybeDumpNodes();
-        
+#if DEBUG_TOPOLOGY
+            DumpNodes?.Invoke();
+#endif
             _root = null;
             Count = 0;
             InvalidateEnumerators();
-            MaybeCheckRI("cleared all nodes");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke("cleared all nodes");
+#endif
         }
         
         public bool ContainsKey(TKey key)
@@ -206,7 +241,9 @@ namespace Eliah {
             child = Drop(child);
             --Count;
             InvalidateEnumerators();
-            MaybeCheckRI($"removed node with key: {key}");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke($"removed node with key: {key}");
+#endif
             return true;
         }
         
@@ -370,7 +407,9 @@ namespace Eliah {
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
-            MaybeCheckRI($"emplaced ({key}, {value})");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            CheckRI?.Invoke($"emplaced ({key}, {value})");
+#endif
         }
         
         private Node FirstNode()
@@ -429,8 +468,12 @@ namespace Eliah {
             }
         }
         
-        [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
-        private void MaybeCheckRI(string reason)
+#if DEBUG_REPRESENTATION_INVARIANTS // So unguarded calls fail to compile.
+        private Action<string>? CheckRI
+            => Log.LoggingRequested ? DoCheckRI : default(Action<string>?);
+#endif
+        
+        private void DoCheckRI(string reason)
         {
             var count = 0;
             
@@ -486,9 +529,17 @@ namespace Eliah {
                 Log.Note("Representation invariants seem OK.");
         }
         
-        [Conditional("DEBUG_TOPOLOGY")]
-        private void MaybeDumpNodes()
-            => _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
+#if DEBUG_TOPOLOGY // So unguarded calls fail to compile.
+        private Action? DumpNodes
+            => Log.LoggingRequested ? DoDumpNodes : default(Action?);
+#endif
+        
+        private void DoDumpNodes()
+        {
+            // Only dump nodes if debugging verbosely.
+            if (Configuration.EnableVerboseDebugging)
+                _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
+        }
         
         private string PseudoAddress => $"0x{GetHashCode():X}";
         
@@ -500,29 +551,40 @@ namespace Eliah {
     /// <summary>Simple logger for printing debug information.</summary>
     /// <remarks>TODO: Use a real logging library instead.</remarks>
     internal static class Log {
-        internal static void Warn(string message) => Print(message);
-        
-        [Conditional("VERBOSE_DEBUGGING")]
-        internal static void Note(string message) => Print(message);
-        
-        /// <summary>Logs the message in some default manner.</summary>
-        private static void Print(string message)
+        /// <summary>Prints a warning message, indicating a problem.</summary>
+        internal static void Warn(string message)
             => Console.WriteLine(message);
+        
+        /// <summary>Prints a notice, not indicating a problem.</summary>
+        /// <remarks>Notices are emitted only with verbose debugging.</remarks>
+        internal static void Note(string message)
+        {
+            if (Configuration.EnableVerboseDebugging)
+                Console.WriteLine(message);
+        }
+        
+        /// <summary>
+        /// For use by code outside this class to determine if logging should
+        /// be done. Currently, no methods in this class check this property.
+        /// </summary>
+        /// <remarks>Not thread-safe without memory barriers.</remarks>
+        internal static bool LoggingRequested { get; set; } = false;
     }
     
     internal static class UnitTest {
         private static async Task Main()
         {
             TheTerms.ShowTop();
-            await RunAllEnabledTests();
-            TheTerms.ShowBottom();
-        }
-        
-        private static async Task RunAllEnabledTests()
-        {
+            
+            if (Configuration.EnableDebugging) Log.LoggingRequested = true;
+            
             RunGeneralTests();
             TestDeletionSmall();
+            
+            Log.LoggingRequested = false;
             await MaybeRunBigTests();
+            
+            TheTerms.ShowBottom();
         }
     
         private static void RunGeneralTests()
