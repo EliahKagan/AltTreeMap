@@ -8,16 +8,17 @@
 
 // AltTreeMap - A tree map implementation and some unit tests.
 
-// When defined, compile a function MaybeCheckRI and calls to it. This must
-// still then be turned on at runtime, and it can be turned on and off at any
-// point during the program's execution.
+// When defined, compile calls to the CheckRI delegate, which will still be
+// null at runtime unless Log.LoggingRequested is set to true. Undefining this
+// conditional symbol may yield a small (but probably measurable) speedup.
 #define DEBUG_REPRESENTATION_INVARIANTS
 
-// When defined, compile a function MaybeDumpNodes and calls to it from some
-// places in the code. Unlike MaybeCheckRI, this is not a comprehensive check
-// It is instead a way to visualize the structure of the tree in LINQPad. This
-// must still then be turned on at runtime, and it can be turned on and off at
-// any point during the program's execution.
+// When defined, compile calls to the DumpNodes delegate, which will still be
+// null at runtime unless Log.LoggingRquested is set to true, and which, even
+// when non-null, will only do anything if Configuration.VerboseDebugging
+// evaluates to true. Undefining this conditional symbol might yield a small
+// speedup, but it would most likely be negligible, as DumpNodes calls don't
+// occur in hot code.
 #define DEBUG_TOPOLOGY
 
 namespace Eliah {
@@ -25,11 +26,11 @@ namespace Eliah {
     /// Knobs for some debugging- and testing-related behavior.
     /// </summary>
     /// <remarks>
-    /// This class collects properties that are fixed at compile-time by
+    /// This class collects properties that are fixed at compile time by
     /// editing the code contained here. The reasons these are given as
     /// properties and not <c>#define</c> are so the compiler can always check
     /// more code paths, and because <c>#define</c>s are cumbersome in some
-    /// situations (e.g., <c>async</c> method can't have <c>Conditional</c>
+    /// situations (e.g., <c>async</c> methods can't have <c>Conditional</c>
     /// attributes, so <c>#if</c> would have to be used). They are properties
     /// rather than <c>const</c>s to avoid warnings about unreachable code.
     /// </remarks>
@@ -39,7 +40,7 @@ namespace Eliah {
         /// Setting this to <c>false</c> currently turns off all debug checks
         /// and debugging output.
         /// </remarks>
-        internal static bool EnableDebugging => true;
+        internal static bool EnableDebugging => false;
     
         /// <summary>
         /// Don't limit debug messages to errors and warnings.
@@ -441,8 +442,10 @@ namespace Eliah {
             }
         }
         
+#if DEBUG_REPRESENTATION_INVARIANTS // So unguarded calls fail to compile.
         private Action<string>? CheckRI
             => Log.LoggingRequested ? DoCheckRI : default(Action<string>?);
+#endif
         
         private void DoCheckRI(string reason)
         {
@@ -500,8 +503,10 @@ namespace Eliah {
                 Log.Note("Representation invariants seem OK.");
         }
         
+#if DEBUG_TOPOLOGY // So unguarded calls fail to compile.
         private Action? DumpNodes
             => Log.LoggingRequested ? DoDumpNodes : default(Action?);
+#endif
         
         private void DoDumpNodes()
         {
