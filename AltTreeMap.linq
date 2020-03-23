@@ -18,7 +18,7 @@
 // It is instead a way to visualize the structure of the tree in LINQPad. This
 // must still then be turned on at runtime, and it can be turned on and off at
 // any point during the program's execution.
-//#define DEBUG_TOPOLOGY
+#define DEBUG_TOPOLOGY
 
 namespace Eliah {
     /// <summary>
@@ -61,6 +61,12 @@ namespace Eliah {
         /// Make some stuff wrong in <c>TestRefForEach</c>, to test the tests.
         /// </summary>
         internal static bool InjectWrongDataInTestRefForEach => false;
+    }
+    
+    public static class AltTreeMap {
+        // TODO: Make a Create<TKey, TValue> function.
+        
+        
     }
 
     /// <summary>BST implementation of an ordered associative array.</summary>
@@ -208,7 +214,9 @@ namespace Eliah {
             child = Drop(child);
             --Count;
             InvalidateEnumerators();
-            if (Log.Enabled) MaybeCheckRI($"removed node with key: {key}");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            if (DebugRI) CheckRI($"removed node with key: {key}");
+#endif
             return true;
         }
         
@@ -240,6 +248,14 @@ namespace Eliah {
         public TKey LastKey() => LastNode().Key;
         
         public TValue LastValue() => LastNode().Value;
+        
+#if DEBUG_REPRESENTATION_INVARIANTS
+        internal static bool DebugRI { get; set; } = false;
+#endif
+
+#if DEBUG_TOPOLOGY
+        internal static bool DebugTopology { get; set; } = false;
+#endif
         
         private sealed class Node {
             internal Node(TKey key, TValue value, Node? parent)
@@ -372,7 +388,9 @@ namespace Eliah {
             child = new Node(key, value, parent);
             ++Count;
             InvalidateEnumerators();
-            if (Log.Enabled) MaybeCheckRI($"emplaced ({key}, {value})");
+#if DEBUG_REPRESENTATION_INVARIANTS
+            if (DebugRI) CheckRI($"emplaced ({key}, {value})");
+#endif
         }
         
         private Node FirstNode()
@@ -431,11 +449,8 @@ namespace Eliah {
             }
         }
         
-        [Conditional("DEBUG_REPRESENTATION_INVARIANTS")]
-        private void MaybeCheckRI(string reason)
+        private void CheckRI(string reason)
         {
-            if (!Log.Enabled) return;
-            
             var count = 0;
             
             bool Check(Node node)
@@ -490,13 +505,8 @@ namespace Eliah {
                 Log.Note("Representation invariants seem OK.");
         }
         
-        [Conditional("DEBUG_TOPOLOGY")]
-        private void MaybeDumpNodes()
-        {
-            // Only dump nodes if debugging verbosely and currently logging.
-            if (Configuration.EnableVerboseDebugging && Log.Enabled)
-                _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
-        }
+        private void DumpNodes()
+            => _root.Dump($"{this} @ {PseudoAddress} [v{_version}] nodes:");
         
         private string PseudoAddress => $"0x{GetHashCode():X}";
         
@@ -505,37 +515,10 @@ namespace Eliah {
         private ulong _version = 0uL;
     }
     
-    /// <summary>Simple logger for printing debug information.</summary>
-    /// <remarks>TODO: Use a real logging library instead.</remarks>
-    internal static class Log {
-        /// <summary>Prints a warning message, indicating a problem.</summary>
-        /// <remarks>
-        /// Warnings are emitted whenever logging is enabled.
-        /// </remarks>
-        internal static void Warn(string message)
-        {
-            if (Enabled) Console.WriteLine(message);
-        }
-        
-        /// <summary>Prints a notice, not indicating a problem.</summary>
-        /// <remarks>Notices are emitted only with verbose debugging.</remarks>
-        internal static void Note(string message)
-        {
-            if (Configuration.EnableVerboseDebugging && Enabled)
-                Console.WriteLine(message);
-        }
-        
-        /// <summary>
-        /// Messages are only printed when this is set to <c>true</c>.
-        /// </summary>
-        /// <remakrs>Not thread-safe without memory barriers.</remarks>
-        internal static bool Enabled { get; set; } = false;
-    }
-    
     internal static class UnitTest {
         private static async Task Main()
         {
-            if (Configuration.EnableDebugging) Log.Enabled = true;
+            if (Configuration.EnableDebugging) AltTreeMap.DebugRI = true;
             
             RunGeneralTests();
             TestDeletionSmall();
