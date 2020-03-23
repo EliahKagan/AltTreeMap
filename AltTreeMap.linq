@@ -512,30 +512,24 @@ namespace Eliah {
         /// <remarks>
         /// Warnings are emitted whenever logging is enabled.
         /// </remarks>
-        internal static Action<string>? Warn { get; private set; } = null;
+        internal static void Warn(string message)
+        {
+            if (Enabled) Console.WriteLine(message);
+        }
         
         /// <summary>Prints a notice, not indicating a problem.</summary>
         /// <remarks>Notices are emitted only with verbose debugging.</remarks>
-        internal static Action<string>? Note { get; private set; } = null;
+        internal static void Note(string message)
+        {
+            if (Configuration.EnableVerboseDebugging && Enabled)
+                Console.WriteLine(message);
+        }
         
         /// <summary>
         /// Messages are only printed when this is set to <c>true</c>.
         /// </summary>
         /// <remakrs>Not thread-safe without memory barriers.</remarks>
-        internal static bool Enabled {
-            get => Warn != null;
-            
-            set {
-                if (value) {
-                    Warn = Console.WriteLine;
-                    if (Configuration.EnableVerboseDebugging)
-                        Note = Console.WriteLine;
-                } else {
-                    Warn = null;
-                    Note = null;
-                }
-            }
-        }
+        internal static bool Enabled { get; set; } = false;
     }
     
     internal static class UnitTest {
