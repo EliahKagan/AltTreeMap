@@ -549,7 +549,6 @@ namespace Eliah {
         private static async Task Main()
         {
             if (Configuration.EnableDebugging) Log.LoggingRequested = true;
-            
             RunGeneralTests();
             TestDeletionSmall();
             
