@@ -577,7 +577,6 @@ namespace Eliah {
             TheTerms.ShowTop();
             
             if (Configuration.EnableDebugging) Log.LoggingRequested = true;
-            
             RunGeneralTests();
             TestDeletionSmall();
             
