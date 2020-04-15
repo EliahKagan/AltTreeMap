@@ -28,7 +28,7 @@ namespace Eliah {
     /// <remarks>
     /// This class collects properties that are fixed at compile time by
     /// editing the code contained here. The reasons these are given as
-    /// properties and not <c>#define</c> are so the compiler can always check
+    /// properties and not <c>#define</c>s are so the compiler can always check
     /// more code paths, and because <c>#define</c>s are cumbersome in some
     /// situations (e.g., <c>async</c> methods can't have <c>Conditional</c>
     /// attributes, so <c>#if</c> would have to be used). They are properties
