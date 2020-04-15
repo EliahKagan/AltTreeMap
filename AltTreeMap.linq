@@ -570,16 +570,19 @@ namespace Eliah {
                 { "speegs", 90 },
             };
             
-            tree.Dump($"after building, size {tree.Count}");
-            tree.Reverse().ToList() // Verifies Reverse returns IEnumerable<T>.
-                .Dump($"after building, size {tree.Count} (reversed)");
+            tree.Dump($"after building, size {tree.Count}", noTotals: true);
+            
+            tree.Reverse()
+                .ToList() // Verifies Reverse returns IEnumerable<T>.
+                .Dump($"after building, size {tree.Count} (reversed)",
+                      noTotals: true);
             
             var copy = new AltTreeMap<string, int>(tree);
             
             tree.TestEnumeratorInvalidation("ham", "waffles", -40);
             tree.TestConditionalGetMethods("foo", "Foo", "bar", "Bar",
                                            "waffles", "toast");
-            tree.Dump($"after adding \"waffles\"");
+            tree.Dump($"after adding \"waffles\"", noTotals: true);
             
             tree.TestRemove("bar");
             tree.TestRemove("foo");
@@ -592,7 +595,8 @@ namespace Eliah {
             tree.Reverse()
                 .Dump($"after clearing, size {tree.Count} (reversed)");
             
-            copy.Dump($"{nameof(copy)}, after changes to {nameof(tree)}");
+            copy.Dump($"{nameof(copy)}, after changes to {nameof(tree)}",
+                      noTotals: true);
             copy.Clear();
             copy.Dump($"{nameof(copy)}, after itself being cleared");
         }
@@ -630,23 +634,25 @@ namespace Eliah {
                 key,
                 result = tree.TryGetValue(key, out var value),
                 value
-            }).Dump(nameof(TestTryGetValue));
+            }).Dump(nameof(TestTryGetValue), noTotals: true);
         }
         
         private static void TestGetOrDefault<TKey, TValue>(
                 this AltTreeMap<TKey, TValue> tree, params TKey[] keys)
         {
             keys.Select(key => new { key, value = tree.GetOrDefault(key) })
-                .Dump(nameof(TestGetOrDefault));
+                .Dump(nameof(TestGetOrDefault), noTotals: true );
         }
         
         private static void TestRemove<TKey, TValue>(
                 this AltTreeMap<TKey, TValue> tree, TKey key)
         {
-            if (tree.Remove(key))
-                tree.Dump($"key \"{key}\" removed, new size {tree.Count}");
-            else
+            if (tree.Remove(key)) {
+                tree.Dump($"key \"{key}\" removed, new size {tree.Count}",
+                          noTotals: true);
+            } else {
                 "".Dump($"key \"{key}\" not found to remove");
+            }
         }
         
         private static async Task MaybeRunBigTests()
