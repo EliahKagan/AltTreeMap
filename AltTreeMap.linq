@@ -140,10 +140,8 @@ namespace Eliah {
             get {
                 var node = Search(key, out _);
                 
-                if (node == null) {
-                    throw new ArgumentException(paramName: nameof(key),
-                                                message: "key not found");
-                }
+                if (node == null)
+                    throw new KeyNotFoundException("Key not found.");
                 
                 return node.Value;
             }
@@ -164,7 +162,7 @@ namespace Eliah {
             
             if (child != null) {
                 throw new ArgumentException(paramName: nameof(key),
-                                            message: "key already exists");
+                                            message: "Key already exists.");
             }
             
             Emplace(ref child, parent, key, value);
@@ -388,12 +386,10 @@ namespace Eliah {
                 if (comp < 0) {
                     parent = child;
                     child = ref parent.Left;
-                }
-                else if (comp != 0) {
+                } else if (comp != 0) {
                     parent = child;
                     child = ref parent.Right;
-                }
-                else break;
+                } else break;
             }
             
             Contract.Assert(child == null || child.Parent == parent);
@@ -620,6 +616,9 @@ namespace Eliah {
             tree.TestRemove("quux");
             tree.TestRemove("waffles");
             
+            tree.TestDuplicateAdd("ham", 42);
+            tree.TestAbsentKey("waffles");
+            
             tree.Clear();
             tree.Dump($"after clearing, size {tree.Count}");
             tree.Reverse()
@@ -644,8 +643,7 @@ namespace Eliah {
                     if (tree.Comparer.Compare(key, triggerKey) == 0)
                         tree.Add(newKey, newValue);
                 });
-            }
-            catch (InvalidOperationException e) {
+            } catch (InvalidOperationException e) {
                 e.Dump(string.Join("; ", tokens));
             }
         }
@@ -682,6 +680,28 @@ namespace Eliah {
                           noTotals: true);
             } else {
                 "".Dump($"key \"{key}\" not found to remove");
+            }
+        }
+        
+        private static void TestDuplicateAdd<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, TKey key, TValue value)
+        {
+            try {
+                tree.Add(key, value);
+                "".Dump("Should not have been able to add duplicate key!");
+            } catch (ArgumentException e) {
+                e.Dump("Correctly threw on attempt to add duplicate key.");
+            }
+        }
+        
+        private static void TestAbsentKey<TKey, TValue>(
+                this AltTreeMap<TKey, TValue> tree, TKey key)
+        {
+            try {
+                tree[key].Dump(
+                        "Should not have been able to index with this key!");
+            } catch (KeyNotFoundException e) {
+                e.Dump("Correctly threw on attempt to index with absent key.");
             }
         }
         
