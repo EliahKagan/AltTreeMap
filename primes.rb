@@ -9,5 +9,5 @@ if ARGV.length != 1
   raise ARGV.empty? ? 'too few arguments' : 'too many arguments'
 end
 
-upper_bound = Integer(ARGV[0].to_i)
+upper_bound = Integer(ARGV[0])
 puts Prime.take_while { |prime| prime <= upper_bound }.join(' ')
