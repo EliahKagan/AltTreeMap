@@ -1057,8 +1057,7 @@ namespace Eliah {
             
             try {
                 OutputSequence = ExtractSequence(FullResult);
-            }
-            catch (InvalidOperationException exception) {
+            } catch (InvalidOperationException exception) {
                 // FIXME: Actually figure out what exceptions to catch here.
                 throw new WolframAlphaSelectException(
                         "Can't extract output sequence from Wolfram|Alpha"
