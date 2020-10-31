@@ -8,6 +8,7 @@
   <Namespace>System.Threading.Tasks</Namespace>
   <Namespace>WolframAlphaNet</Namespace>
   <Namespace>WolframAlphaNet.Objects</Namespace>
+  <RuntimeVersion>5.0</RuntimeVersion>
 </Query>
 
 // AltTreeMap - A tree map implementation and some unit tests.
@@ -937,7 +938,7 @@ namespace Eliah {
             proc.Start();
             var stdout = proc.StandardOutput.ReadToEndAsync();
             var stderr = proc.StandardError.ReadToEndAsync();
-            proc.WaitForExit();
+            await proc.WaitForExitAsync();
 
             return (proc.ExitCode, await stdout, await stderr);
         }
