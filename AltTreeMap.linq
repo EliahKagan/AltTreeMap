@@ -549,7 +549,7 @@ namespace Eliah {
             TestDeletionSmall();
 
             Log.LoggingRequested = false;
-            await MaybeRunBigTests();
+            await MaybeRunBigTestsAsync();
         }
 
         private static void RunGeneralTests()
@@ -675,11 +675,11 @@ namespace Eliah {
             }
         }
 
-        private static async Task MaybeRunBigTests()
+        private static async Task MaybeRunBigTestsAsync()
         {
             if (!Configuration.EnableBigTests) return;
 
-            var primes = await TestDeletionBig();
+            var primes = await TestDeletionBigAsync();
             TestRefForEach(primes);
         }
 
@@ -707,11 +707,12 @@ namespace Eliah {
             string.Join(", ", window).Dump("right side");
         }
 
-        private static async Task<AltTreeMap<long, int?>> TestDeletionBig()
+        private static async Task<AltTreeMap<long, int?>>
+        TestDeletionBigAsync()
         {
             const long upper_bound = 10_000_000L;
 
-            var known_task = GetPrimesFromRuby(upper_bound);
+            var known_task = GetPrimesFromRubyAsync(upper_bound);
             var primes = GetPrimes(upper_bound);
             var known = await known_task;
 
@@ -835,7 +836,8 @@ namespace Eliah {
             return odds;
         }
 
-        private static async Task<long[]> GetPrimesFromRuby(long upperBound)
+        private static async Task<long[]>
+        GetPrimesFromRubyAsync(long upperBound)
         {
             const string interpreter = "ruby";
             const string scriptName = "primes.rb";
@@ -845,7 +847,7 @@ namespace Eliah {
                 => $"{interpreter} {Scripts.GetPath(scriptName)} {argument}";
 
             var (status, stdout, stderr) =
-                    await Scripts.Run(interpreter, scriptName, argument);
+                    await Scripts.RunAsync(interpreter, scriptName, argument);
 
             if (!string.IsNullOrWhiteSpace(stderr))
                 stderr.Dump($"\"{CmdLine()}\" standard error stream");
@@ -863,7 +865,7 @@ namespace Eliah {
 
     internal static class Scripts {
         internal static async Task<(int status, string stdout, string stderr)>
-        Run(string interpreter, string scriptName, params string[] args)
+        RunAsync(string interpreter, string scriptName, params string[] args)
         {
             var proc = new Process();
 
