@@ -575,7 +575,7 @@ namespace Eliah {
             TestDeletionSmall();
 
             Log.LoggingRequested = false;
-            await MaybeRunBigTests();
+            await MaybeRunBigTestsAsync();
 
             TheTerms.ShowBottom();
         }
@@ -703,12 +703,12 @@ namespace Eliah {
             }
         }
 
-        private static async Task MaybeRunBigTests()
+        private static async Task MaybeRunBigTestsAsync()
         {
             if (!Configuration.EnableBigTests) return;
 
-            var primes = await TestDeletionBig();
-            await TestRefForEach(primes);
+            var primes = await TestDeletionBigAsync();
+            await TestRefForEachAsync(primes);
         }
 
         private static void TestDeletionSmall()
@@ -735,11 +735,12 @@ namespace Eliah {
             string.Join(", ", window).Dump("right side");
         }
 
-        private static async Task<AltTreeMap<long, int?>> TestDeletionBig()
+        private static async Task<AltTreeMap<long, int?>>
+        TestDeletionBigAsync()
         {
             const long upper_bound = 10_000_000L;
 
-            var known_task = GetPrimesFromRuby(upper_bound);
+            var known_task = GetPrimesFromRubyAsync(upper_bound);
             var primes = GetPrimes(upper_bound);
             var known = await known_task;
 
@@ -756,7 +757,8 @@ namespace Eliah {
             return primes;
         }
 
-        private static async Task TestRefForEach(AltTreeMap<long, int?> primes)
+        private static async Task
+        TestRefForEachAsync(AltTreeMap<long, int?> primes)
         {
             var count = 0;
             primes.ForEach((long key, ref int? value) => value = ++count);
@@ -784,7 +786,7 @@ namespace Eliah {
 
             if (Configuration.InjectWrongDataInTestRefForEach) {
                 "Injecting wrong data, for testing."
-                    .Dump($"In {nameof(TestRefForEach)}");
+                    .Dump($"In {nameof(TestRefForEachAsync)}");
 
                 // True positive (wrong tree value).
                 --primes[known[4].prime];
@@ -799,8 +801,9 @@ namespace Eliah {
 
             // TODO: When the local test is much more involved than now,
             // we can do it and await Wolfram|Alpha results at the same time.
-            var wolframResults = await known.Select(kv => kv.prime)
-                                            .WolframAlphaSelect("PrimePI");
+            var wolframResults =
+                await known.Select(kv => kv.prime)
+                           .WolframAlphaSelectAsync("PrimePI");
 
             known.Shuffle() // Might smoke out lookup-order-sensitive bugs.
                  .Select(kv => (prime: kv.prime,
@@ -889,7 +892,8 @@ namespace Eliah {
             return odds;
         }
 
-        private static async Task<long[]> GetPrimesFromRuby(long upperBound)
+        private static async Task<long[]>
+        GetPrimesFromRubyAsync(long upperBound)
         {
             const string interpreter = "ruby";
             const string scriptName = "primes.rb";
@@ -899,7 +903,7 @@ namespace Eliah {
                 => $"{interpreter} {Scripts.GetPath(scriptName)} {argument}";
 
             var (status, stdout, stderr) =
-                    await Scripts.Run(interpreter, scriptName, argument);
+                    await Scripts.RunAsync(interpreter, scriptName, argument);
 
             if (!string.IsNullOrWhiteSpace(stderr))
                 stderr.Dump($"\"{CmdLine()}\" standard error stream");
@@ -917,7 +921,7 @@ namespace Eliah {
 
     internal static class Scripts {
         internal static async Task<(int status, string stdout, string stderr)>
-        Run(string interpreter, string scriptName, params string[] args)
+        RunAsync(string interpreter, string scriptName, params string[] args)
         {
             var proc = new Process();
 
@@ -966,10 +970,11 @@ namespace Eliah {
         /// in the Wolfram Language or otherwise, could be passed in.
         /// </remarks>
         internal static async Task<WolframAlphaSelectResults>
-        WolframAlphaSelect<T>(this IEnumerable<T> arguments, string function)
+        WolframAlphaSelectAsync<T>(this IEnumerable<T> arguments,
+                                   string function)
         {
-            // FIXME: Extract this File.ReadAllText logic into the Scripts class.
-            //        Call the new function from GetTermsHtml() and from here.
+            // FIXME: Extract this File.ReadAllText logic into the Scripts
+            // class. Call the new function from GetTermsHtml() and from here.
             var engine = new WolframAlpha(File.ReadAllText(Scripts.GetPath("AppID")).Trim());
 
             return await Task.Run(() => WolframAlphaSelectResults.Retrieve(
