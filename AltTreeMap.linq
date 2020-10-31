@@ -4,6 +4,7 @@
   <Namespace>System.Runtime.CompilerServices</Namespace>
   <Namespace>System.Security.Cryptography</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
+  <RuntimeVersion>5.0</RuntimeVersion>
 </Query>
 
 // AltTreeMap - A tree map implementation and some unit tests.
@@ -881,7 +882,7 @@ namespace Eliah {
             proc.Start();
             var stdout = proc.StandardOutput.ReadToEndAsync();
             var stderr = proc.StandardError.ReadToEndAsync();
-            proc.WaitForExit();
+            await proc.WaitForExitAsync();
 
             return (proc.ExitCode, await stdout, await stderr);
         }
