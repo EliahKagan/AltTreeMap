@@ -1,5 +1,6 @@
 <Query Kind="Program">
-  <NuGetReference>WolframAlphaNET</NuGetReference>
+  <NuGetReference Version="106.15.0">RestSharp</NuGetReference>
+  <NuGetReference Version="2.0.0">WolframAlphaNET</NuGetReference>
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Diagnostics.Contracts</Namespace>
   <Namespace>System.Net</Namespace>
