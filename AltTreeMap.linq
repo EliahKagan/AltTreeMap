@@ -9,7 +9,7 @@
   <Namespace>System.Threading.Tasks</Namespace>
   <Namespace>WolframAlphaNet</Namespace>
   <Namespace>WolframAlphaNet.Objects</Namespace>
-  <RuntimeVersion>5.0</RuntimeVersion>
+  <RuntimeVersion>6.0</RuntimeVersion>
 </Query>
 
 // AltTreeMap - A tree map implementation and some unit tests.
