@@ -4,7 +4,7 @@
   <Namespace>System.Runtime.CompilerServices</Namespace>
   <Namespace>System.Security.Cryptography</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
-  <RuntimeVersion>5.0</RuntimeVersion>
+  <RuntimeVersion>6.0</RuntimeVersion>
 </Query>
 
 // AltTreeMap - A tree map implementation and some unit tests.
