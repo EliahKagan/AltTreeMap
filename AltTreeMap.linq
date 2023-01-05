@@ -9,6 +9,8 @@
 
 // AltTreeMap - A tree map implementation and some unit tests.
 
+#nullable enable
+
 // When defined, compile calls to the CheckRI delegate, which will still be
 // null at runtime unless Log.LoggingRequested is set to true. Undefining this
 // conditional symbol may yield a small (but probably measurable) speedup.
@@ -22,7 +24,7 @@
 // occur in hot code.
 #define DEBUG_TOPOLOGY
 
-namespace Eliah {
+namespace Ekgn {
     /// <summary>
     /// Knobs for some debugging- and testing-related behavior.
     /// </summary>
@@ -84,7 +86,7 @@ namespace Eliah {
         public AltTreeMap(AltTreeMap<TKey, TValue> other)
             : this(other.Comparer)
         {
-            // FIXME: Do this iteratively with O(1) auxiliary space instead.
+            // TODO: Do this iteratively with O(1) auxiliary space instead.
             static void Copy(Node src, out Node dest, Node? destParent)
             {
                 var child = new Node(src.Key, src.Value, destParent);
@@ -200,7 +202,7 @@ namespace Eliah {
         System.Collections.IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
 
-        public TValue GetOrDefault(TKey key, TValue value = default)
+        public TValue? GetOrDefault(TKey key, TValue? value = default)
         {
             var child = Search(key, out _);
             return child == null ? value : child.Value;
@@ -229,7 +231,7 @@ namespace Eliah {
             var child = Search(key, out _);
 
             if (child == null) {
-                value = default!; // FIXME: Given MaybeNullWhen, is "!" needed?
+                value = default;
                 return false;
             }
 
@@ -935,10 +937,10 @@ namespace Eliah {
             return new Random(BitConverter.ToInt32(buffer, 0));
         }
 
-        // RNGCryptoServiceProvider is thread-safe (unlike Random), so use it
-        // to generate seeds for the Random instances local to each thread.
-        private static RNGCryptoServiceProvider _csprng =
-            new RNGCryptoServiceProvider();
+        // Unlike Random, System.Security.Cryptography.RandomNumberGenerator is
+        // thread safe. I use it to seed Random instances local to each thread.
+        private static RandomNumberGenerator _csprng =
+            RandomNumberGenerator.Create();
 
         private static ThreadLocal<Random> _prng =
             new ThreadLocal<Random>(CreatePrng);
