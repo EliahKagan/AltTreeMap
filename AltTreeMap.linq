@@ -946,6 +946,9 @@ namespace Ekgn {
             return (proc.ExitCode, await stdout, await stderr);
         }
 
+        internal static string GetContent(string scriptName)
+            => File.ReadAllText(GetPath(scriptName)).Trim();
+
         internal static string GetPath(string scriptName)
             => Path.Combine(GetDirectory(), scriptName);
 
@@ -977,9 +980,7 @@ namespace Ekgn {
         WolframAlphaSelectAsync<T>(this IEnumerable<T> arguments,
                                    string function)
         {
-            // FIXME: Extract this File.ReadAllText logic into the Scripts
-            // class. Call the new function from GetTermsHtml() and from here.
-            var engine = new WolframAlpha(File.ReadAllText(Scripts.GetPath("AppID")).Trim());
+            var engine = new WolframAlpha(Scripts.GetContent("AppID"));
 
             return await Task.Run(() => WolframAlphaSelectResults.Retrieve(
                                             engine, function, arguments));
@@ -1206,7 +1207,7 @@ namespace Ekgn {
         }
 
         private static string GetTermsHtml()
-            => Regex.Match(File.ReadAllText(Scripts.GetPath($"{Name}.html")),
+            => Regex.Match(Scripts.GetContent($"{Name}.html"),
                            $@"{Guide("BEGIN")}(.+?){Guide("END")}",
                            RegexOptions.Singleline)
                     .Groups[1].ToString();
