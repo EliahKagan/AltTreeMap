@@ -20,14 +20,14 @@
 // use the Wolfram|Alpha API to obtain some information used in the tests. To
 // turn this on (or off), make Configuration.EnableWolframAlpha return true (or
 // false). Use of Wolfram|Alpha, including via this application, is subject to
-// the Wolfram|Alpha Terms of Use: https://www.wolframalpha.com/termsofuse/
+// the Wolfram|Alpha Terms of Use: https://www.wolframalpha.com/termsofuse
 //
 // Results and information from this site are not a certified or definitive
 // source of information that can be relied on for legal, financial, medical,
 // life-safety or any other critical purposes.
 //
 // See also the Wolfram|Alpha API Terms of Use:
-// https://products.wolframalpha.com/api/termsofuse.html
+// https://products.wolframalpha.com/api/termsofuse
 
 #nullable enable
 
